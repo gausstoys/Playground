@@ -10,6 +10,7 @@
         w = h * 3/2;
     }
     var objScale = w/maxW/2;
+    var margin = 30 * objScale;
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update });
     var time = new Phaser.Time(game);
 
@@ -18,11 +19,14 @@
     var first = true;
     var gameOver = false;
 
+    // game score
+    var score = 0;
+    var startTime;
+
     // game objects
     var shuttle;
     var rocks = [];
     var explosions = [];
-    var margin = 30 * objScale;
 
     // keys
     var spaceKey;
@@ -30,7 +34,9 @@
 
     // text objects
     var startTxt;
+    var scoreTxt;
     var ggTxt;
+    var ggScoreTxt;
     var connectTxt;
 
     function preload() {
@@ -61,17 +67,23 @@
 
         // add display texts
         var startTxtStyle = { fill: "#fff000", align: "center" };
-        startTxt = game.add.text(game.world.centerX, game.world.centerY + 100, "PRESS \"SPACE\" TO START", startTxtStyle);
+        startTxt = game.add.text(game.world.centerX, game.world.centerY + 400*objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
         startTxt.anchor.set(0.5);
         startTxt.visible = false;
-
+        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: "80px" };
+        scoreTxt = game.add.text(w - 150*objScale, 150 * objScale, "", scoreTxtStyle);
+        scoreTxt.anchor.set(0.5);
+        scoreTxt.visible = false;
         var ggTxtStyle = { fill: "#fff000", align: "center", fontSize: "64px" };
         ggTxt = game.add.text(game.world.centerX, game.world.centerY, "GAME OVER", ggTxtStyle);
         ggTxt.anchor.set(0.5);
         ggTxt.visible = false;
-
+        var ggScoreTxtStyle = { fill: "#fff000", align: "center", fontSize: "40px" };
+        ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200*objScale, "", ggScoreTxtStyle);
+        ggScoreTxt.anchor.set(0.5);
+        ggScoreTxt.visible = false;
         var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: "40px" };
-        connectTxt = game.add.text(game.world.centerX, 100, "GaussSense is not detected", connectTxtStyle);
+        connectTxt = game.add.text(game.world.centerX, 200 * objScale, "GaussSense is not detected", connectTxtStyle);
         connectTxt.anchor.set(0.5);
         connectTxt.visible = false;
     }
@@ -115,18 +127,21 @@
             // check collision
             game.physics.arcade.overlap(shuttle, rocks, onShuttleCrashed);
 
+            // show score
+            var now = new Date();
+            if (now - startTime > 2000) {
+                startTime = new Date();
+                scoreTxt.text = ++score + " ";
+            }
+            game.world.bringToTop(scoreTxt);
+
             for (var i = 0; i < explosions.length; i++) {
                explosions[i].destroy();
             }
 
         } else if (gameOver) {
 
-            if (!ggTxt.visible) {
-                ggTxt.visible = true;
-                game.time.events.add(Phaser.Timer.SECOND * 5, function() {
-                    if (!gameStart) startTxt.visible = true;
-                }, this);
-            }
+            showGameOver();
 
             if (spaceKey.isDown) {
                 console.log("Game starting");
@@ -164,6 +179,27 @@
         gameOver = false;
         startTxt.visible = false;
         ggTxt.visible = false;
+        ggScoreTxt.visible = false;
+
+        startTime = new Date();
+        score = 0;
+        scoreTxt.text = score + " ";
+        scoreTxt.visible = true;
+    }
+
+    function showGameOver() {
+        if (!ggTxt.visible) {
+            game.world.bringToTop(ggTxt);
+            game.world.bringToTop(ggScoreTxt);
+            game.world.bringToTop(startTxt);
+
+            ggTxt.visible = true;
+            ggScoreTxt.text = "SCORE: " + score;
+            ggScoreTxt.visible = true;
+            game.time.events.add(Phaser.Timer.SECOND * 5, function() {
+                if (!gameStart) startTxt.visible = true;
+            }, this);
+        }
     }
 
     function createRock() {
