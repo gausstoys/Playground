@@ -9,6 +9,7 @@
     if (w * 2/3 > h) {
         w = h * 3/2;
     }
+    var objScale = w/maxW/2;
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update });
     var time = new Phaser.Time(game);
 
@@ -21,7 +22,7 @@
     var shuttle;
     var rocks = [];
     var explosions = [];
-    var margin = 10;
+    var margin = 30 * objScale;
 
     // keys
     var spaceKey;
@@ -48,10 +49,9 @@
         bgImg.height = h;
 
         // add space shuttle
-        shuttle = game.add.sprite(50, 100, "shuttle");
-        shuttle.width *= 0.5;
-        shuttle.height *= 0.5;
-        console.log(shuttle.height);
+        shuttle = game.add.sprite(100 * objScale, 400 * objScale, "shuttle");
+        shuttle.width *= objScale;
+        shuttle.height *= objScale;
         game.physics.arcade.enable(shuttle);
         shuttle.body.setCircle(shuttle.height*0.8, (shuttle.width-shuttle.height*0.8)*0.5, 0);
 
@@ -85,24 +85,25 @@
             return;
         }
 
-
         if (gameStart) {
 
             var north = gs.getNorthPoint();
-            console.log(north.x, north.y);
+            // console.log(north.x, north.y);
 
             // shuttle movements
+            shuttle.body.velocity.x = 0;
+            shuttle.body.velocity.y = 0;
             if ((north.y < 0.3 && north.y > 0 || cursors.up.isDown) && shuttle.y > margin) {
-                shuttle.y -= 4;
+                shuttle.body.velocity.y = -500 * objScale;
             }
             if ((north.y > 0.7 || cursors.down.isDown) && shuttle.y < h - shuttle.height - margin) {
-                shuttle.y += 4;
+                shuttle.body.velocity.y = 500 * objScale;
             }
             if ((north.x > 0.7 || cursors.right.isDown) && shuttle.x < w - shuttle.width - margin) {
-                shuttle.x += 4;
+                shuttle.body.velocity.x = 500 * objScale;
             }
             if ((north.x < 0.3 && north.x > 0 || cursors.left.isDown) && shuttle.x > margin) {
-                shuttle.x -= 4;
+                shuttle.body.velocity.x = -500 * objScale;
             }
 
             // start creating rocks
@@ -112,9 +113,7 @@
             }
 
             // check collision
-            var rocksObj = [];
-            for (var i = 0; i < rocks.length; i++) rocksObj.push(rocks[i]["object"]);
-            game.physics.arcade.overlap(shuttle, rocksObj, onShuttleCrashed);
+            game.physics.arcade.overlap(shuttle, rocks, onShuttleCrashed);
 
             for (var i = 0; i < explosions.length; i++) {
                explosions[i].destroy();
@@ -146,10 +145,8 @@
 
         // rocks movements
         for (var i = 0; i < rocks.length; i++) {
-            var rock = rocks[i];
-            rock["object"].x -= rock["speed"];
-            if (rock["object"].x < -rock["object"].width * 1.25 - margin) {
-                rock["object"].destroy();
+            if (rocks[i].x < -rocks[i].width * 1.25 - margin) {
+                rocks[i].destroy();
                 rocks.splice(i, 1);
                 i--;
             }
@@ -160,8 +157,8 @@
         for (var i = 0; i < explosions.length; i++) {
             explosions[i].destroy();
         }
-        shuttle.x = 50;
-        shuttle.y = 100;
+        shuttle.x = 100 * objScale;
+        shuttle.y = 400 * objScale;
         gameStart = true;
         first = true;
         gameOver = false;
@@ -173,15 +170,13 @@
         console.log("creating rock!");
 
         var rock = game.add.sprite(w, Math.random() * h, "rock");
-        var aspectRatio = rock.height/rock.width;
-        rock.width = rock.width * (Math.random() / 2 + 0.5);
-        rock.height = rock.width * aspectRatio;
+        var size = Math.random() + 1;
+        rock.width *= objScale * size;
+        rock.height *= objScale * size;
         game.physics.arcade.enable(rock);
         rock.body.setSize(rock.width*0.8, rock.height*0.8, rock.width*0.1, rock.height*0.1);
-        rocks.push({
-            "object": rock,
-            "speed": Math.random()*2 + 1
-        });
+        rock.body.velocity.x = -(Math.random()*200 + 200) * objScale;
+        rocks.push(rock);
 
         if (gameStart) {
             game.time.events.add(Phaser.Timer.SECOND * (Math.random()*3+1), createRock, this);
@@ -190,7 +185,8 @@
 
     function onShuttleCrashed() {
         console.log("shuttle crashed!");
-
+        shuttle.body.velocity.x = 0;
+        shuttle.body.velocity.y = 0;
         if (!gameOver) {
             var exp1 = [];
             for (var i = 0; i < 16; i++) exp1.push(i+32);
