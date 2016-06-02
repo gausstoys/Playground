@@ -20,6 +20,7 @@
 
     // game logic
     var gameStart = false;
+    var gamePaused = false;
     var gameOver = false;
     var first = true;
     var buffer = 0;
@@ -33,6 +34,7 @@
     var shuttle;
     var rocks = [];
     var explosions = [];
+    var MAX_VELOCITY = 200;
 
     // keys
     var spaceKey;
@@ -116,9 +118,11 @@
 
     function update() {
         if (gs.isConnected()) {
-            connectTxt.visible = false;
+            if (gamePaused) {
+                resumeGame();
+            }
         } else {
-            connectTxt.visible = true;
+            pauseGame();
             return;
         }
 
@@ -178,6 +182,19 @@
             }
 
         }
+    }
+
+    function resumeGame() {
+        connectTxt.visible = false;
+        var v = Math.floor(score/10) * 10 + 100;
+        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;;
+    }
+
+    function pauseGame() {
+        gamePaused = true;
+        connectTxt.visible = true;
+        game.world.bringToTop(connectTxt);
+        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = 0;
     }
 
     function resetGame() {
@@ -253,11 +270,14 @@
         }, rockPolygon[rockTypes[idx]]);
         rock.body.damping = 0;
         rock.body.allowGravity = false;
-        rock.body.velocity.x = -100;
+
+        var v = Math.floor(score/10) * 10 + 100;
+        rock.body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;
+
         rocks.push(rock);
 
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1), createRockUp, this);
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockUp, this);
         }
     }
 
@@ -286,12 +306,14 @@
         game.physics.arcade.enable(rock);
         rock.body.allowGravity = false;
         rock.body.damping = 0;
-        rock.body.velocity.x = -100;
+
+        var v = Math.floor(score/10) * 10 + 100;
+        rock.body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;
 
         rocks.push(rock);
 
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1), createRockDown, this);
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockDown, this);
         }
     }
 

@@ -15,6 +15,7 @@
 
     // game logic
     var gameStart = false;
+    var gamePaused = false;
     var first = true;
     var gameOver = false;
 
@@ -91,9 +92,11 @@
     function update() {
 
         if (gs.isConnected()) {
-            connectTxt.visible = false;
+            if (gamePaused) {
+                resumeGame();
+            }
         } else {
-            connectTxt.visible = true;
+            pauseGame();
             return;
         }
 
@@ -148,6 +151,16 @@
             }
 
         }
+    }
+
+    function resumeGame() {
+        connectTxt.visible = false;
+    }
+
+    function pauseGame() {
+        gamePaused = true;
+        connectTxt.visible = true;
+        game.world.bringToTop(connectTxt);
     }
 
     function resetGame() {

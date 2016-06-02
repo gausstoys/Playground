@@ -27,7 +27,7 @@
     var shuttle;
     var rocks = [];
     var explosions = [];
-    var MAX_VELOCITY = 400;
+    var MAX_VELOCITY = 300;
 
     // keys
     var spaceKey;
@@ -214,7 +214,7 @@
         rocks.push(rock);
 
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*3+1), createRock, this);
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*(3-baseVelocity/MAX_VELOCITY/2)+1), createRock, this);
         }
     }
 
