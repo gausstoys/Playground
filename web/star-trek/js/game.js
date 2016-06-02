@@ -144,7 +144,6 @@
             showGameOver();
 
             if (spaceKey.isDown) {
-                console.log("Game starting");
                 resetGame();
             }
 
@@ -152,7 +151,6 @@
 
             startTxt.visible = true;
             if (spaceKey.isDown) {
-                console.log("Game starting");
                 resetGame();
             }
 
@@ -203,8 +201,6 @@
     }
 
     function createRock() {
-        console.log("creating rock!");
-
         var rock = game.add.sprite(w, Math.random() * h, "rock");
         var size = Math.random() + 1;
         rock.width *= objScale * size;
@@ -220,7 +216,6 @@
     }
 
     function onShuttleCrashed() {
-        console.log("shuttle crashed!");
         shuttle.body.velocity.x = 0;
         shuttle.body.velocity.y = 0;
         if (!gameOver) {
