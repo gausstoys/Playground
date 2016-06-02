@@ -27,6 +27,7 @@
     var shuttle;
     var rocks = [];
     var explosions = [];
+    var MAX_VELOCITY = 400;
 
     // keys
     var spaceKey;
@@ -207,7 +208,9 @@
         rock.height *= objScale * size;
         game.physics.arcade.enable(rock);
         rock.body.setSize(rock.width*0.8, rock.height*0.8, rock.width*0.1, rock.height*0.1);
-        rock.body.velocity.x = -(Math.random()*200 + 200) * objScale;
+
+        var baseVelocity = (score + 200 > MAX_VELOCITY)? MAX_VELOCITY : score + 200;
+        rock.body.velocity.x = -(Math.random()*200 + baseVelocity) * objScale;
         rocks.push(rock);
 
         if (gameStart) {
