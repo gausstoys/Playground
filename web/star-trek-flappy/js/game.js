@@ -29,12 +29,15 @@
     var score = 0;
     var startTime;
 
+
     // game objects
     var bgImg1, bgImg2;
     var shuttle;
     var rocks = [];
     var explosions = [];
     var MAX_VELOCITY = 200;
+    var rockUpTimerEvent;
+    var rockDownTimerEvent;
 
     // keys
     var spaceKey;
@@ -90,6 +93,11 @@
         shuttle.body.addCircle(shuttle.height * 0.5);
         shuttle.body.onBeginContact.add(onShuttleCrashed, this);
 
+        // rockUpTimerEvent = game.time.events.loop(game.rnd.integerInRange(2000, 5000), createRockUp, this);
+        // rockDownTimerEvent = game.time.events.loop(game.rnd.integerInRange(2000, 5000), createRockDown, this);
+        // rockUpTimerEvent.loop = false;
+        // rockDownTimerEvent.loop = false;
+
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
 
@@ -118,11 +126,15 @@
 
     function update() {
         if (gs.isConnected()) {
+            connectTxt.visible = false;
             if (gamePaused) {
                 resumeGame();
             }
         } else {
-            pauseGame();
+            connectTxt.visible = true;
+            if (gameStart) {
+                pauseGame();
+            }
             return;
         }
 
@@ -145,8 +157,12 @@
             // start creating rocks
             if (first) {
                 first = false;
-                game.time.events.add(Phaser.Timer.SECOND * Math.random()*3, createRockUp, this);
-                game.time.events.add(Phaser.Timer.SECOND * Math.random()*3, createRockDown, this);
+                // game.time.events.add(Phaser.Timer.SECOND * Math.random()*3, createRockUp, this);
+                // game.time.events.add(Phaser.Timer.SECOND * Math.random()*3, createRockDown, this);
+                rockUpTimerEvent = game.time.events.loop(game.rnd.integerInRange(2000, 5000), createRockUp, this);
+                rockDownTimerEvent = game.time.events.loop(game.rnd.integerInRange(2000, 5000), createRockDown, this);
+                // rockUpTimerEvent.loop = true;
+                // rockDownTimerEvent.loop = true;
             }
 
             // show score
@@ -162,6 +178,8 @@
             }
 
         } else if (gameOver) {
+            rockUpTimerEvent.loop = false;
+            rockDownTimerEvent.loop = false;
 
             shuttle.body.velocity.y = 0;
             for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = 0;
@@ -185,14 +203,17 @@
     }
 
     function resumeGame() {
-        connectTxt.visible = false;
+        gamePaused = false;
+        rockUpTimerEvent.loop = true;
+        rockDownTimerEvent.loop = true;
         var v = Math.floor(score/10) * 10 + 100;
-        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;;
+        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;
     }
 
     function pauseGame() {
         gamePaused = true;
-        connectTxt.visible = true;
+        rockUpTimerEvent.loop = false;
+        rockDownTimerEvent.loop = false;
         game.world.bringToTop(connectTxt);
         for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = 0;
     }
@@ -276,9 +297,9 @@
 
         rocks.push(rock);
 
-        if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockUp, this);
-        }
+        // if (gameStart) {
+        //     game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockUp, this);
+        // }
     }
 
     function createRockDown() {
@@ -312,9 +333,9 @@
 
         rocks.push(rock);
 
-        if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockDown, this);
-        }
+        // if (gameStart) {
+        //     game.time.events.add(Phaser.Timer.SECOND * (Math.random()*4+1.5), createRockDown, this);
+        // }
     }
 
     function moveShuttle(intensity) {

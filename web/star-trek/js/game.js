@@ -121,7 +121,7 @@
 
             // start creating rocks
             if (first) {
-                game.time.events.add(Phaser.Timer.SECOND * 5, createRock, this);
+                game.time.events.add(Phaser.Timer.SECOND * 2, createRock, this);
                 first = false;
             }
 
@@ -141,20 +141,16 @@
             }
 
         } else if (gameOver) {
-
             showGameOver();
 
             if (spaceKey.isDown) {
                 resetGame();
             }
-
         } else {
-
             startTxt.visible = true;
             if (spaceKey.isDown) {
                 resetGame();
             }
-
         }
 
         // rocks movements
