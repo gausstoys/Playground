@@ -95,6 +95,7 @@
             connectTxt.visible = false;
         } else {
             connectTxt.visible = true;
+            game.world.bringToTop(connectTxt);
             return;
         }
 

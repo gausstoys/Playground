@@ -15,12 +15,11 @@
     var margin = 10;
 
     // Phaser objects
-    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
     var time = new Phaser.Time(game);
 
     // game logic
     var gameStart = false;
-    var gamePaused = false;
     var gameOver = false;
     var first = true;
     var buffer = 0;
@@ -116,17 +115,19 @@
         connectTxt.visible = false;
     }
 
-    function update() {
+    function pauseUpdate() {
         if (gs.isConnected()) {
             connectTxt.visible = false;
-            if (gamePaused) {
-                resumeGame();
-            }
-        } else {
+            game.paused = false;
+        }
+    }
+
+    function update() {
+        if (!gs.isConnected()) {
             connectTxt.visible = true;
             game.world.bringToTop(connectTxt);
-            if (gameStart && !gamePaused) {
-                pauseGame();
+            if (gameStart) {
+                game.paused = true;
             }
             return;
         }
@@ -189,19 +190,6 @@
             }
 
         }
-    }
-
-    function resumeGame() {
-        game.time.events.resume();
-        gamePaused = false;
-        var v = Math.floor(score/10) * 10 + 100;
-        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = (v > MAX_VELOCITY)? -MAX_VELOCITY : -v;
-    }
-
-    function pauseGame() {
-        game.time.events.pause();
-        gamePaused = true;
-        for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = 0;
     }
 
     function resetGame() {
