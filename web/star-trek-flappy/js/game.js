@@ -130,6 +130,8 @@
                 game.paused = true;
             }
             return;
+        } else {
+            connectTxt.visible = false;
         }
 
         if (gameStart) {

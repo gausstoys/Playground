@@ -10,14 +10,16 @@
         w = h * 3/2;
     }
     var objScale = w/maxW/2;
-    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
     var time = new Phaser.Time(game);
 
     // game logic
     var gameStart = false;
-    var gamePaused = false;
-    var first = true;
     var gameOver = false;
+    var first = true;
+
+    // game score
+    var score = 0;
 
     // game objects
     var shuttle;
@@ -32,7 +34,9 @@
 
     // text objects
     var startTxt;
+    var scoreTxt;
     var ggTxt;
+    var ggScoreTxt;
     var connectTxt;
 
     var expIdx = [];
@@ -74,30 +78,44 @@
 
         // add display texts
         var startTxtStyle = { fill: "#fff000", align: "center" };
-        startTxt = game.add.text(game.world.centerX, game.world.centerY + 100, "PRESS \"SPACE\" TO START", startTxtStyle);
+        startTxt = game.add.text(game.world.centerX, game.world.centerY + 400*objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
         startTxt.anchor.set(0.5);
         startTxt.visible = false;
-
+        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: "80px" };
+        scoreTxt = game.add.text(w - 150*objScale, 150 * objScale, "", scoreTxtStyle);
+        scoreTxt.anchor.set(0.5);
+        scoreTxt.visible = false;
         var ggTxtStyle = { fill: "#fff000", align: "center", fontSize: "64px" };
         ggTxt = game.add.text(game.world.centerX, game.world.centerY, "GAME OVER", ggTxtStyle);
         ggTxt.anchor.set(0.5);
         ggTxt.visible = false;
-
+        var ggScoreTxtStyle = { fill: "#fff000", align: "center", fontSize: "40px" };
+        ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200*objScale, "", ggScoreTxtStyle);
+        ggScoreTxt.anchor.set(0.5);
+        ggScoreTxt.visible = false;
         var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: "40px" };
-        connectTxt = game.add.text(game.world.centerX, 100, "GaussSense is not detected", connectTxtStyle);
+        connectTxt = game.add.text(game.world.centerX, 200 * objScale, "GaussSense is not detected", connectTxtStyle);
         connectTxt.anchor.set(0.5);
         connectTxt.visible = false;
     }
 
-    function update() {
-
+    function pauseUpdate() {
         if (gs.isConnected()) {
-            if (gamePaused) {
-                resumeGame();
+            connectTxt.visible = false;
+            game.paused = false;
+        }
+    }
+
+    function update() {
+        if (!gs.isConnected()) {
+            connectTxt.visible = true;
+            game.world.bringToTop(connectTxt);
+            if (gameStart) {
+                game.paused = true;
             }
-        } else {
-            pauseGame();
             return;
+        } else {
+            connectTxt.visible = false;
         }
 
         if (gameStart) {
@@ -124,18 +142,15 @@
                 game.physics.arcade.overlap(enemies[i], shuttle, onShuttleCrashed);
             }
 
+            game.world.bringToTop(scoreTxt);
+
             for (var i = 0; i < explosions.length; i++) {
                explosions[i].destroy();
             }
 
         } else if (gameOver) {
 
-            if (!ggTxt.visible) {
-                ggTxt.visible = true;
-                game.time.events.add(Phaser.Timer.SECOND * 5, function() {
-                    if (!gameStart) startTxt.visible = true;
-                }, this);
-            }
+            showGameOver();
 
             if (spaceKey.isDown) {
                 console.log("Game starting");
@@ -153,30 +168,38 @@
         }
     }
 
-    function resumeGame() {
-        connectTxt.visible = false;
-    }
-
-    function pauseGame() {
-        gamePaused = true;
-        connectTxt.visible = true;
-        game.world.bringToTop(connectTxt);
-    }
-
     function resetGame() {
         for (var i = 0; i < explosions.length; i++) {
             explosions[i].destroy();
         }
         gameStart = true;
-        first = true;
         gameOver = false;
+        first = true;
         startTxt.visible = false;
         ggTxt.visible = false;
+        ggScoreTxt.visible = false;
+
+        score = 0;
+        scoreTxt.text = score + " ";
+        scoreTxt.visible = true;
+    }
+
+    function showGameOver() {
+        if (!ggTxt.visible) {
+            game.world.bringToTop(ggTxt);
+            game.world.bringToTop(ggScoreTxt);
+            game.world.bringToTop(startTxt);
+
+            ggTxt.visible = true;
+            ggScoreTxt.text = "SCORE: " + score;
+            ggScoreTxt.visible = true;
+            game.time.events.add(Phaser.Timer.SECOND * 5, function() {
+                if (!gameStart) startTxt.visible = true;
+            }, this);
+        }
     }
 
     function createEnemy() {
-        console.log("creating enemy!");
-
         var enemy = game.add.sprite(w, -h*0.3 + Math.random()*h*1.6, "enemy");
         enemy.width *= objScale;
         enemy.height *= objScale;
@@ -185,8 +208,14 @@
         game.physics.arcade.velocityFromAngle(enemy.rotation * 180/Math.PI, -400 * objScale, enemy.body.velocity);
         enemies.push(enemy);
 
+        var maxTime;
+        if (score < 30) {
+            maxTime = 2500 - Math.floor(score/5) * 300;
+        } else {
+            maxTime = (2500 - Math.floor(score/10)*300 > 250) ? 2500 - Math.floor(score/10)*300 : 250;
+        }
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2+1), createEnemy, this);
+            game.time.events.add(Phaser.Timer.HALF + game.rnd.integerInRange(0, maxTime), createEnemy, this);
         }
     }
 
@@ -207,8 +236,6 @@
     }
 
     function onShuttleCrashed() {
-        console.log("shuttle crashed!");
-
         if (!gameOver) {
             var exp = [];
             for (var i = 0; i < 16; i++) exp.push(i+32);
@@ -248,6 +275,9 @@
 
         enemy.destroy();
         ray.destroy();
+
+        score++;
+        scoreTxt.text = score + " ";
     }
 
 })();
