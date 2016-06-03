@@ -11,13 +11,13 @@
     }
     var objScale = w/maxW/2;
     var margin = 30 * objScale;
-    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update });
+    var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
     var time = new Phaser.Time(game);
 
     // game logic
     var gameStart = false;
-    var first = true;
     var gameOver = false;
+    var first = true;
 
     // game score
     var score = 0;
@@ -89,13 +89,20 @@
         connectTxt.visible = false;
     }
 
-    function update() {
-
+    function pauseUpdate() {
         if (gs.isConnected()) {
             connectTxt.visible = false;
-        } else {
+            game.paused = false;
+        }
+    }
+
+    function update() {
+        if (!gs.isConnected()) {
             connectTxt.visible = true;
             game.world.bringToTop(connectTxt);
+            if (gameStart) {
+                game.paused = true;
+            }
             return;
         }
 
@@ -171,8 +178,8 @@
         shuttle.x = 100 * objScale;
         shuttle.y = 400 * objScale;
         gameStart = true;
-        first = true;
         gameOver = false;
+        first = true;
         startTxt.visible = false;
         ggTxt.visible = false;
         ggScoreTxt.visible = false;
