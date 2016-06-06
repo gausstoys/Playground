@@ -9,6 +9,8 @@
     if (w > maxW) w = maxW;
     if (w * 2/3 > h) {
         w = h * 3/2;
+    } else {
+        h = w * 2/3;
     }
     var objScale = w/maxW/2;
     var rockScale = objScale * 1.4;

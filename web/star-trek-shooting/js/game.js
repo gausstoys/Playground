@@ -8,6 +8,8 @@
     if (w > maxW) w = maxW;
     if (w * 2/3 > h) {
         w = h * 3/2;
+    } else {
+        h = w * 2/3;
     }
     var objScale = w/maxW/2;
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
