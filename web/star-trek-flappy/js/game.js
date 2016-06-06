@@ -35,6 +35,12 @@
     var explosions = [];
     var MAX_VELOCITY = 200;
 
+    // tutorial objects
+    var graphics;
+    var tutorial;
+    var tutorialTxt;
+    var tutorialDestroyed = false;
+
     // keys
     var spaceKey;
 
@@ -52,6 +58,7 @@
         game.load.image("rock-up-2", "img/ex03-05.png");
         game.load.image("rock-down-1", "img/ex03-06.png");
         game.load.image("rock-down-2", "img/ex03-07.png");
+        game.load.image("tutorial", "img/tutorial-z.png");
         game.load.spritesheet("explosion", "img/explosions.png", 64, 64);
     }
 
@@ -89,27 +96,44 @@
         shuttle.body.addCircle(shuttle.height * 0.5);
         shuttle.body.onBeginContact.add(onShuttleCrashed, this);
 
+        // add tutorial
+        graphics = game.add.graphics(0, 0);
+        graphics.lineStyle(30 * objScale, 0xfdcf58, 1);
+        graphics.beginFill(0xFFFFFF, 1);
+        graphics.drawRoundedRect(w * 0.15, h * 0.25, w * 0.7, h * 0.65, 10 * objScale);
+        graphics.endFill();
+
+        tutorial = game.add.image(w * 0.2, h * 0.5, "tutorial");
+        tutorial.width *= objScale * 1.2;
+        tutorial.height *= objScale * 1.2;
+        tutorial.anchor.set(0, 0.5);
+
+        var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
+        tutorialTxt = game.add.text(w * 0.4, h * 0.5,
+            "CONTROL THE HEIGHT OF \nTHE MAGNET TO PILOT\nYOUR SHUTTLE.", tutorialTxtStyle);
+        tutorialTxt.anchor.set(0, 0.5);
+
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
 
         // add display texts
-        var startTxtStyle = { fill: "#fff000", align: "center" };
+        var startTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 60 * objScale };
         startTxt = game.add.text(game.world.centerX, game.world.centerY + 400*objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
         startTxt.anchor.set(0.5);
         startTxt.visible = false;
-        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: "80px" };
+        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: 140 * objScale };
         scoreTxt = game.add.text(w - 150*objScale, 150 * objScale, "", scoreTxtStyle);
         scoreTxt.anchor.set(0.5);
         scoreTxt.visible = false;
-        var ggTxtStyle = { fill: "#fff000", align: "center", fontSize: "64px" };
+        var ggTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 120 * objScale };
         ggTxt = game.add.text(game.world.centerX, game.world.centerY, "GAME OVER", ggTxtStyle);
         ggTxt.anchor.set(0.5);
         ggTxt.visible = false;
-        var ggScoreTxtStyle = { fill: "#fff000", align: "center", fontSize: "40px" };
+        var ggScoreTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 100 * objScale };
         ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200*objScale, "", ggScoreTxtStyle);
         ggScoreTxt.anchor.set(0.5);
         ggScoreTxt.visible = false;
-        var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: "40px" };
+        var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: 80 * objScale };
         connectTxt = game.add.text(game.world.centerX, 200 * objScale, "GaussSense is not detected", connectTxtStyle);
         connectTxt.anchor.set(0.5);
         connectTxt.visible = false;
@@ -135,6 +159,9 @@
         }
 
         if (gameStart) {
+            if (!tutorialDestroyed) {
+                destroyTutorial();
+            }
             moveBgImg();
 
             var mid = gs.getBipolarMidpoint();
@@ -231,6 +258,13 @@
                 if (!gameStart) startTxt.visible = true;
             }, this);
         }
+    }
+
+    function destroyTutorial() {
+        graphics.destroy();
+        tutorial.destroy();
+        tutorialTxt.destroy();
+        tutorialDestroyed = true;
     }
 
     function moveBgImg() {
