@@ -39,6 +39,12 @@
     var MAX_ANGLE = 90;
     var MAX_VELOCITY = 50;
 
+    // tutorial objects
+    var graphics;
+    var tutorial;
+    var tutorialTxt;
+    var tutorialDestroyed = false;
+
     // keys
     var spaceKey;
     var cursors;
@@ -55,6 +61,7 @@
         game.load.image("pilot", "img/ex05-02.png");
         game.load.image("horiz", "img/ex05-03.png");
         game.load.image("meter", "img/ex05-04.png");
+        game.load.image("tutorial", "img/tutorial-rotation.png")
     }
 
     function create() {
@@ -86,27 +93,44 @@
         warning.endFill();
         warning.visible = false;
 
+        // add tutorial
+        graphics = game.add.graphics(0, 0);
+        graphics.lineStyle(30 * objScale, 0xfdcf58, 1);
+        graphics.beginFill(0xFFFFFF, 1);
+        graphics.drawRoundedRect(w * 0.15, h * 0.25, w * 0.7, h * 0.65, 10 * objScale);
+        graphics.endFill();
+
+        tutorial = game.add.image(w * 0.2, h * 0.5, "tutorial");
+        tutorial.width *= objScale * 1.2;
+        tutorial.height *= objScale * 1.2;
+        tutorial.anchor.set(0, 0.5);
+
+        var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
+        tutorialTxt = game.add.text(w * 0.4, h * 0.5,
+            "ROTATE THE MAGNET TO\nSTAY BALANCED ON \nYOUR JOURNEY.", tutorialTxtStyle);
+        tutorialTxt.anchor.set(0, 0.5);
+
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
 
         // add display texts
-        var startTxtStyle = { fill: "#fff000", align: "center" };
+        var startTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 60 * objScale };
         startTxt = game.add.text(game.world.centerX, game.world.centerY + 400*objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
         startTxt.anchor.set(0.5);
         startTxt.visible = false;
-        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: "80px" };
+        var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: 140 * objScale };
         scoreTxt = game.add.text(w - 150*objScale, 150 * objScale, "", scoreTxtStyle);
         scoreTxt.anchor.set(0.5);
         scoreTxt.visible = false;
-        var ggTxtStyle = { fill: "#fff000", align: "center", fontSize: "64px" };
+        var ggTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 120 * objScale };
         ggTxt = game.add.text(game.world.centerX, game.world.centerY, "GAME OVER", ggTxtStyle);
         ggTxt.anchor.set(0.5);
         ggTxt.visible = false;
-        var ggScoreTxtStyle = { fill: "#fff000", align: "center", fontSize: "40px" };
+        var ggScoreTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 100 * objScale };
         ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200*objScale, "", ggScoreTxtStyle);
         ggScoreTxt.anchor.set(0.5);
         ggScoreTxt.visible = false;
-        var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: "40px" };
+        var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: 80 * objScale };
         connectTxt = game.add.text(game.world.centerX, 200 * objScale, "GaussSense is not detected", connectTxtStyle);
         connectTxt.anchor.set(0.5);
         connectTxt.visible = false;
@@ -132,19 +156,20 @@
         }
 
         if (gameStart) {
+            if (!tutorialDestroyed) {
+                destroyTutorial();
+            }
 
             var mid = gs.getBipolarMidpoint();
 
-            // "pilot" rotation: rotate bg image actually
-            var delta = mid.angle - lastAngle;
-            if (Math.abs(delta) > 0.05 && Math.abs(delta) < Math.PI/4) {
+            var ang = mid.angle*180/Math.PI;
+            if (Math.abs(ang) > 10) {
                 if (bgImg.angle > 80) {
-                    delta = (delta < 0)? 0 : delta;
+                    ang = (ang < 0)? 0 : ang;
                 } else if (bgImg.angle < -80) {
-                    delta = (delta > 0)? 0 : delta;
+                    ang = (ang > 0)? 0 : ang;
                 }
-                bgImg.rotation -= delta;
-                lastAngle = mid.angle;
+                bgImg.angle -= ang/100;
             }
 
             if (first) {
@@ -210,7 +235,6 @@
 
     function showGameOver() {
         if (!ggTxt.visible) {
-
             ggTxt.visible = true;
             ggScoreTxt.text = "SCORE: " + score;
             ggScoreTxt.visible = true;
@@ -221,6 +245,13 @@
         game.world.bringToTop(ggTxt);
         game.world.bringToTop(ggScoreTxt);
         game.world.bringToTop(startTxt);
+    }
+
+    function destroyTutorial() {
+        graphics.destroy();
+        tutorial.destroy();
+        tutorialTxt.destroy();
+        tutorialDestroyed = true;
     }
 
     function createRotation() {
