@@ -18,6 +18,9 @@
     var gameStart = false;
     var gameOver = false;
     var first = true;
+    var balanced = false;
+    var balanceCnt = 0;
+    var imbalanceCnt = 0;
 
     // game score
     var score = 0;
@@ -28,12 +31,13 @@
     var bgTween;
     var pilot;
     var meter;
+    var warning;
 
+    // rotate angle
+    var lastAngle = 0;
     var UNIT_ANGLE = 25;
     var MAX_ANGLE = 90;
-    var angleMatched = false;
-
-    var explosions = [];
+    var MAX_VELOCITY = 50;
 
     // keys
     var spaceKey;
@@ -51,38 +55,36 @@
         game.load.image("pilot", "img/ex05-02.png");
         game.load.image("horiz", "img/ex05-03.png");
         game.load.image("meter", "img/ex05-04.png");
-        game.load.spritesheet("explosion", "img/explosions.png", 64, 64);
     }
 
     function create() {
         gs = new GaussSense();
 
         // add background image
-        bgImg = game.add.image(w / 2, h * 0.7, "bg");
+        bgImg = game.add.sprite(w / 2, h * 0.8, "bg");
         bgImg.width = w;
-        bgImg.height = h;
+        bgImg.height *= w/bgImg.width;
         bgImg.anchor.set(0.5, 0.7);
+        game.physics.arcade.enable(bgImg);
 
         // add pilot
         pilot = game.add.image(w / 2, h * 0.7, "pilot");
         pilot.width = w;
         pilot.height = h;
         pilot.anchor.set(0.5, 0.7);
-
-        // var horiz = game.add.image(w / 2, h * 0.7, "horiz");
-        // var ratio = horiz.height/horiz.width;
-        // horiz.width = w * 0.82;
-        // horiz.height = horiz.width * ratio;
-        // horiz.anchor.set(0.5);
-
         meter = game.add.image(w / 2, h * 0.7, "meter");
         var ratio = meter.height/meter.width;
         meter.width = w * 0.82;
         meter.height = meter.width * ratio;
         meter.anchor.set(0.5, 0);
 
-        bgTween = game.add.tween(bgImg).to({ angle: Math.random()*UNIT_ANGLE*2 - UNIT_ANGLE }, 1000, Phaser.Easing.Quadratic.InOut, false, 0, 0, false);
-        bgTween.onComplete.add(bgRotateComplete);
+        // Red warning mask
+        warning = game.add.graphics(0, 0);
+        // warning.lineStyle(30 * objScale, 0xfdcf58, 1);
+        warning.beginFill(0xFF0000, 0.2);
+        warning.drawRect(0, 0, w, h);
+        warning.endFill();
+        warning.visible = false;
 
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
@@ -132,21 +134,33 @@
         if (gameStart) {
 
             var mid = gs.getBipolarMidpoint();
-            // console.log(north.x, north.y);
 
-            // shuttle movements
-            pilot.rotation = mid.angle;
-            meter.rotation = mid.angle;
-            angleMatched = (Math.abs(pilot.angle - bgImg.angle) < 5)? true : false;
+            // "pilot" rotation: rotate bg image actually
+            var delta = mid.angle - lastAngle;
+            if (Math.abs(delta) > 0.05 && Math.abs(delta) < Math.PI/4) {
+                if (bgImg.angle > 80) {
+                    delta = (delta < 0)? 0 : delta;
+                } else if (bgImg.angle < -80) {
+                    delta = (delta > 0)? 0 : delta;
+                }
+                bgImg.rotation -= delta;
+                lastAngle = mid.angle;
+            }
 
-            // start creating rocks
             if (first) {
-                // game.time.events.add(Phaser.Timer.SECOND * 2, createRock, this);
-                bgTween.start();
+                game.time.events.add(Phaser.Timer.SECOND * 2, createRotation, this);
                 first = false;
             }
 
-            // check collision
+            // check if angle exceed 80 or -80
+            if (bgImg.angle > 80) {
+                bgImg.body.angularVelocity = -Math.abs(bgImg.body.angularVelocity);
+            } else if (bgImg.angle < -80) {
+                bgImg.body.angularVelocity = Math.abs(bgImg.body.angularVelocity);
+            }
+
+            // check balance
+            checkBalance();
 
             // show score
             var now = new Date();
@@ -156,12 +170,14 @@
             }
             game.world.bringToTop(scoreTxt);
 
-            for (var i = 0; i < explosions.length; i++) {
-               explosions[i].destroy();
-            }
-
         } else if (gameOver) {
             showGameOver();
+
+            if (bgImg.angle > 45) {
+                bgImg.body.angularVelocity = -5;
+            } else if (bgImg.angle < -45) {
+                bgImg.body.angularVelocity = 5;
+            }
 
             if (spaceKey.isDown) {
                 resetGame();
@@ -175,12 +191,13 @@
     }
 
     function resetGame() {
-        for (var i = 0; i < explosions.length; i++) {
-            explosions[i].destroy();
-        }
         gameStart = true;
         gameOver = false;
         first = true;
+        bgImg.angle = 0;
+        bgImg.body.angularVelocity = 0;
+
+        warning.visible = false;
         startTxt.visible = false;
         ggTxt.visible = false;
         ggScoreTxt.visible = false;
@@ -193,9 +210,6 @@
 
     function showGameOver() {
         if (!ggTxt.visible) {
-            game.world.bringToTop(ggTxt);
-            game.world.bringToTop(ggScoreTxt);
-            game.world.bringToTop(startTxt);
 
             ggTxt.visible = true;
             ggScoreTxt.text = "SCORE: " + score;
@@ -204,49 +218,46 @@
                 if (!gameStart) startTxt.visible = true;
             }, this);
         }
+        game.world.bringToTop(ggTxt);
+        game.world.bringToTop(ggScoreTxt);
+        game.world.bringToTop(startTxt);
     }
 
-    function bgRotateComplete() {
-        game.time.events.add(Phaser.Timer.SECOND * 1, function () {
-            if (!angleMatched) {
-                console.log("not matched");
-                onShuttleCrashed();
-            } else {
-                var angle = 0;
-                if (bgImg.angle > MAX_ANGLE) {
-                    angle = -Math.random()*UNIT_ANGLE;
-                } else if (bgImg.angle < -MAX_ANGLE) {
-                    angle = Math.random()*UNIT_ANGLE;
-                } else {
-                    angle = Math.random()*UNIT_ANGLE*2 - UNIT_ANGLE;
-                }
-                bgTween = game.add.tween(bgImg).to({ angle: angle }, 1000, Phaser.Easing.Quadratic.InOut, true, 0, 0, false);
-                bgTween.onComplete.add(bgRotateComplete);
+    function createRotation() {
+        var baseVelocity = (score + 5 > MAX_VELOCITY)? MAX_VELOCITY : score + 5;
+        bgImg.body.angularVelocity = Math.sign(Math.random() - 0.5) * (Math.random()*baseVelocity + 5);
+
+        if (gameStart) {
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*(4-baseVelocity/MAX_VELOCITY/2)+1), createRotation, this);
+        }
+    }
+
+    function checkBalance() {
+        balanced = (Math.abs(bgImg.angle) < 5)? true : false;
+        if (!balanced) {
+            balanceCnt = 0;
+            imbalanceCnt++;
+        } else {
+            balanceCnt++;
+            if (balanceCnt > 10) {
+                imbalanceCnt = 0;
+                warning.visible = false;
             }
-        });
+        }
+        if (imbalanceCnt > 100) {
+            if (imbalanceCnt % 10 == 0) {
+                warning.visible = !warning.visible;
+            }
+        }
+        if (imbalanceCnt > 300) {
+            warning.visible = true;
+            imbalanceCnt = 0;
+            balanceCnt = 0;
+            onShuttleCrashed();
+        }
     }
 
     function onShuttleCrashed() {
-        // shuttle.body.velocity.x = 0;
-        // shuttle.body.velocity.y = 0;
-        // if (!gameOver) {
-        //     var exp1 = [];
-        //     for (var i = 0; i < 16; i++) exp1.push(i+32);
-        //     for (var i = 0; i < 30; i++) {
-        //         game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2), function() {
-        //             var midX = shuttle.x + shuttle.width / 2;
-        //             var midY = shuttle.y + shuttle.height / 2;
-        //             var posX = midX + (Math.random()-0.8) * shuttle.width * 1.2;
-        //             var posY = midY + (Math.random()-0.8) * shuttle.height * 1.2;
-        //             var explosion = game.add.sprite(posX, posY, "explosion", 32);
-        //             explosion.width *= Math.random() + 1;
-        //             explosion.height = explosion.width;
-        //             explosion.animations.add("exp1", exp1, 10, false);
-        //             explosion.play("exp1");
-        //             explosions.push(explosion);
-        //         }, this);
-        //     }
-        // }
         gameOver = true;
         gameStart = false;
     }
