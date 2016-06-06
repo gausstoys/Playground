@@ -69,6 +69,7 @@
         game.physics.arcade.enable(shuttle);
         shuttle.body.setCircle(shuttle.height*0.8, (shuttle.width-shuttle.height*0.8)*0.5, 0);
 
+        // add tutorial
         graphics = game.add.graphics(0, 0);
         graphics.lineStyle(30 * objScale, 0xfdcf58, 1);
         graphics.beginFill(0xFFFFFF, 1);
