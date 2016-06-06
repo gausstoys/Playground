@@ -30,6 +30,7 @@
 
     var shuttle;
     var shuttleTween;
+    var shuttleMaxScaleX;
     var shuttleMaxScaleY;
     var shuttlePos = 1;
     var confuseStartTime;
@@ -77,6 +78,7 @@
         shuttle.width *= objScale * 1.2;
         shuttle.height *= objScale * 1.2;
         shuttle.anchor.set(0.5);
+        shuttleMaxScaleX = shuttle.scale.x;
         shuttleMaxScaleY = shuttle.scale.y;
 
         // register key events
@@ -254,7 +256,7 @@
                 shuttle.loadTexture("shuttle-q");
             }
             var t = new Date();
-            game.add.tween(shuttle.scale).to({ x: shuttle.scale.x*1.2 }, 500, Phaser.Easing.Quadratic.InOut, true, 0, 3, true);
+            game.add.tween(shuttle.scale).to({ x: shuttleMaxScaleX*1.2 }, 500, Phaser.Easing.Quadratic.InOut, true, 0, 3, true);
             if (t - confuseStartTime > 500 * (3+1)) {
                 onShuttleCrashed();
             }
@@ -269,8 +271,8 @@
 
     function onShuttleCrashed() {
         if (!gameOver) {
-            var exp1 = [];
-            for (var i = 0; i < 16; i++) exp1.push(i+64);
+            var exp = [];
+            for (var i = 0; i < 16; i++) exp.push(i+64);
             for (var i = 0; i < 30; i++) {
                 game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2), function() {
                     var posX = shuttle.x + (Math.random()-0.8) * shuttle.width * 1.2;
@@ -278,8 +280,8 @@
                     var explosion = game.add.sprite(posX, posY, "explosion", 32);
                     explosion.width *= Math.random() + 1;
                     explosion.height = explosion.width;
-                    explosion.animations.add("exp1", exp1, 10, false);
-                    explosion.play("exp1");
+                    explosion.animations.add("exp", exp, 10, false);
+                    explosion.play("exp");
                     explosions.push(explosion);
                 }, this);
             }
