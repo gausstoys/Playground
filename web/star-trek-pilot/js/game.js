@@ -30,6 +30,7 @@
 
     // game objects
     var bgImg;
+    var horiz;
     var bgTween;
     var pilot;
     var meter;
@@ -59,11 +60,11 @@
     var connectTxt;
 
     function preload() {
-        game.load.image("bg", "img/ex05-00.png");
+        game.load.image("bg", "img/ex05-01.png");
         game.load.image("pilot", "img/ex05-02.png");
         game.load.image("horiz", "img/ex05-03.png");
         game.load.image("meter", "img/ex05-04.png");
-        game.load.image("tutorial", "img/tutorial-rotation.png")
+        game.load.image("tutorial", "img/tutorial-tilt.png")
     }
 
     function create() {
@@ -75,13 +76,18 @@
         bgImg.height *= w/bgImg.width;
         bgImg.anchor.set(0.5, 0.7);
         game.physics.arcade.enable(bgImg);
+        horiz = game.add.sprite(w / 2 - 10*objScale, h * 0.7, "horiz");
+        var ratio = horiz.height/horiz.width;
+        horiz.width = w * 0.82;
+        horiz.height = horiz.width * ratio;
+        horiz.anchor.set(0.5, 0);
 
         // add pilot
         pilot = game.add.image(w / 2, h * 0.7, "pilot");
         pilot.width = w;
         pilot.height = h;
         pilot.anchor.set(0.5, 0.7);
-        meter = game.add.image(w / 2, h * 0.7, "meter");
+        meter = game.add.image(w / 2 - 10*objScale, h * 0.7, "meter");
         var ratio = meter.height/meter.width;
         meter.width = w * 0.82;
         meter.height = meter.width * ratio;
@@ -89,7 +95,6 @@
 
         // Red warning mask
         warning = game.add.graphics(0, 0);
-        // warning.lineStyle(30 * objScale, 0xfdcf58, 1);
         warning.beginFill(0xFF0000, 0.2);
         warning.drawRect(0, 0, w, h);
         warning.endFill();
@@ -109,7 +114,7 @@
 
         var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
         tutorialTxt = game.add.text(w * 0.4, h * 0.5,
-            "ROTATE THE MAGNET TO\nSTAY BALANCED ON \nYOUR JOURNEY.", tutorialTxtStyle);
+            "TILT THE MAGNET TO\nSTAY BALANCED ON \nYOUR JOURNEY.", tutorialTxtStyle);
         tutorialTxt.anchor.set(0, 0.5);
 
         // register key events
@@ -165,7 +170,7 @@
 
             var mid = gs.getBipolarMidpoint();
 
-            var ang = mid.angle*180/Math.PI;
+            var ang = mid.pitch * 2;
             if (Math.abs(ang) > 10) {
                 if (bgImg.angle > 80) {
                     ang = (ang < 0)? 0 : ang;
@@ -206,6 +211,7 @@
             } else if (bgImg.angle < -45) {
                 bgImg.body.angularVelocity = 5;
             }
+            horiz.angle = bgImg.angle;
 
             if (spaceKey.isDown) {
                 resetGame();
@@ -271,12 +277,14 @@
         if (!balanced) {
             balanceCnt = 0;
             imbalanceCnt++;
+            horiz.angle = bgImg.angle;
         } else {
             balanceCnt++;
             if (balanceCnt > 10) {
                 imbalanceCnt = 0;
                 warning.visible = false;
             }
+            horiz.angle = 0;
         }
         if (imbalanceCnt > 100) {
             if (imbalanceCnt % 10 == 0) {
