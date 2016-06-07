@@ -152,6 +152,7 @@
             if (gameStart) {
                 game.paused = true;
             }
+            bgImg.body.angularVelocity = 0;
             return;
         } else {
             connectTxt.visible = false;
