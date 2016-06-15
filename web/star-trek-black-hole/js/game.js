@@ -12,6 +12,7 @@
         h = w * 2/3;
     }
     var objScale = w/maxW/2;
+    var margin = 30 * objScale;
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
     var time = new Phaser.Time(game);
 
@@ -22,13 +23,21 @@
 
     // game score
     var score = 0;
+    var startTime;
 
     // game objects
+    var hole;
+    var holeTween;
+    var holeMaxScaleY;
+
     var shuttle;
-    var enemies = [];
-    var rays = [];
+    var shuttleTween;
+    var shuttleMaxScaleX;
+    var shuttleMaxScaleY;
+    var shuttlePos = 1;
+    var confuseStartTime;
+
     var explosions = [];
-    var margin = 10;
 
     // tutorial objects
     var graphics;
@@ -38,7 +47,6 @@
 
     // keys
     var spaceKey;
-    var cursors;
 
     // text objects
     var startTxt;
@@ -47,19 +55,13 @@
     var ggScoreTxt;
     var connectTxt;
 
-    var expIdx = [];
-    for (var i = 0; i < 8; i++) {
-        var exp = [];
-        for (var j = 0; j < 16; j++) exp.push(i*8 + j);
-        expIdx.push(exp);
-    }
-
     function preload() {
-        game.load.image("shuttle", "img/ex02-01.png");
-        game.load.image("enemy", "img/ex02-02.png");
-        game.load.image("ray", "img/ex02-03.png");
-        game.load.image("bg", "img/ex02-04.png");
-        game.load.image("tutorial", "img/tutorial-rotation.png");
+        game.load.image("bg", "img/ex04-01.png");
+        game.load.image("hole", "img/ex04-04.png");
+        game.load.image("shuttle-n", "img/ex04-02.png");
+        game.load.image("shuttle-s", "img/ex04-05.png");
+        game.load.image("shuttle-q", "img/ex04-03.png");
+        game.load.image("tutorial", "img/tutorial-flip.png");
         game.load.spritesheet("explosion", "img/explosions.png", 64, 64);
     }
 
@@ -71,15 +73,22 @@
         bgImg.width = w;
         bgImg.height = h;
 
+        // add black hole image
+        hole = game.add.image(w/2, h/2, "hole");
+        hole.width = w;
+        hole.height = h;
+        hole.anchor.set(0.5);
+        holeMaxScaleY = hole.scale.y;
+        holeTween = game.add.tween(hole.scale).to({ y: 0.8 * objScale }, 1000, Phaser.Easing.Quadratic.InOut, false, 0, 0, true);
+        holeTween.onComplete.add(squeezeBlackHole);
+
         // add space shuttle
-        shuttle = game.add.sprite(0, 0, "shuttle");
-        shuttle.width *= objScale;
-        shuttle.height *= objScale;
-        shuttle.x = shuttle.width * 0.4 + margin*objScale;
-        shuttle.y = (h-shuttle.height) / 2;
-        shuttle.anchor.set(0.4, 0.55);
-        game.physics.arcade.enable(shuttle);
-        shuttle.body.setCircle(shuttle.height*0.8, (shuttle.width-shuttle.height*0.8)*0.5, 0);
+        shuttle = game.add.sprite(w/2, h/2, "shuttle-n");
+        shuttle.width *= objScale * 1.2;
+        shuttle.height *= objScale * 1.2;
+        shuttle.anchor.set(0.5);
+        shuttleMaxScaleX = shuttle.scale.x;
+        shuttleMaxScaleY = shuttle.scale.y;
 
         // add tutorial
         graphics = game.add.graphics(0, 0);
@@ -95,7 +104,7 @@
 
         var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
         tutorialTxt = game.add.text(w * 0.4, h * 0.5,
-            "ROTATE THE MAGNET TO\nAIM AT ENEMIES AND\nPROTECT YOUR SHUTTLE.", tutorialTxtStyle);
+            "FLIP THE MAGNET TO\nMATCH THE GRAVITY FIELD\nOF THE BLACK HOLE.", tutorialTxtStyle);
         tutorialTxt.anchor.set(0, 0.5);
 
         // register key events
@@ -149,28 +158,28 @@
                 destroyTutorial();
             }
 
-            var mid = gs.getBipolarMidpoint();
+            var north = gs.getNorthPoint();
+            var south = gs.getSouthPoint();
 
             // shuttle movements
-            shuttle.rotation = mid.angle;
+            if (north.intensity > 20) {
+                changeShuttle(true);
+            } else if (south.intensity < -20) {
+                changeShuttle(false);
+            }
+            // console.log(north.x, north.y);
 
-            // start creating enemies
-            if (first) {
-                game.time.events.add(Phaser.Timer.SECOND * 5, createEnemy, this);
-                game.time.events.add(Phaser.Timer.SECOND * 1, createRay, this);
-                first = false;
+            // shift blackHole
+            if (!holeTween.isRunning) {
+                holeTween.start();
             }
 
-            // check collision
-            for (var i = 0; i < enemies.length; i++) {
-                for (var j = 0; j < rays.length; j++) {
-                    game.physics.arcade.collide(enemies[i], rays[j], function() {
-                        onDestroyEnemy(i, j);
-                    });
-                }
-                game.physics.arcade.overlap(enemies[i], shuttle, onShuttleCrashed);
+            // show score
+            var now = new Date();
+            if (now - startTime > 2000) {
+                startTime = new Date();
+                scoreTxt.text = ++score + " ";
             }
-
             game.world.bringToTop(scoreTxt);
 
             for (var i = 0; i < explosions.length; i++) {
@@ -178,22 +187,16 @@
             }
 
         } else if (gameOver) {
-
             showGameOver();
 
             if (spaceKey.isDown) {
-                console.log("Game starting");
                 resetGame();
             }
-
         } else {
-
             startTxt.visible = true;
             if (spaceKey.isDown) {
-                console.log("Game starting");
                 resetGame();
             }
-
         }
     }
 
@@ -201,6 +204,7 @@
         for (var i = 0; i < explosions.length; i++) {
             explosions[i].destroy();
         }
+        shuttle.loadTexture("shuttle-n");
         gameStart = true;
         gameOver = false;
         first = true;
@@ -208,6 +212,7 @@
         ggTxt.visible = false;
         ggScoreTxt.visible = false;
 
+        startTime = new Date();
         score = 0;
         scoreTxt.text = score + " ";
         scoreTxt.visible = true;
@@ -215,10 +220,6 @@
 
     function showGameOver() {
         if (!ggTxt.visible) {
-            game.world.bringToTop(ggTxt);
-            game.world.bringToTop(ggScoreTxt);
-            game.world.bringToTop(startTxt);
-
             ggTxt.visible = true;
             ggScoreTxt.text = "SCORE: " + score;
             ggScoreTxt.visible = true;
@@ -226,6 +227,9 @@
                 if (!gameStart) startTxt.visible = true;
             }, this);
         }
+        game.world.bringToTop(ggTxt);
+        game.world.bringToTop(ggScoreTxt);
+        game.world.bringToTop(startTxt);
     }
 
     function destroyTutorial() {
@@ -235,46 +239,76 @@
         tutorialDestroyed = true;
     }
 
-    function createEnemy() {
-        var enemy = game.add.sprite(w, -h*0.3 + Math.random()*h*1.6, "enemy");
-        enemy.width *= objScale;
-        enemy.height *= objScale;
-        enemy.rotation = Math.atan((enemy.y - shuttle.y) / (enemy.x - shuttle.x));
-        game.physics.arcade.enable(enemy);
-        game.physics.arcade.velocityFromAngle(enemy.rotation * 180/Math.PI, -400 * objScale, enemy.body.velocity);
-        enemies.push(enemy);
-
-        var maxTime;
-        if (score < 30) {
-            maxTime = 2500 - Math.floor(score/5) * 300;
+    function squeezeBlackHole() {
+        if (Math.random() < 0.2 + Math.floor(score/5)*0.05) {
+            // shift black hole
+            holeTween = game.add.tween(hole.scale).to({ y: 0 }, 600, Phaser.Easing.Quadratic.InOut, false, 0, 0, false);
+            holeTween.onComplete.add(shiftBlackHole);
+            game.time.events.add(Phaser.Timer.HALF, checkShuttlePosition, this);
         } else {
-            maxTime = (2500 - Math.floor(score/10)*300 > 250) ? 2500 - Math.floor(score/10)*300 : 250;
-        }
-        if (gameStart) {
-            game.time.events.add(Phaser.Timer.HALF + game.rnd.integerInRange(0, maxTime), createEnemy, this);
+            holeTween = game.add.tween(hole.scale).to({ y: Math.sign(hole.scale.y) * (Math.random()+0.4) * objScale }, 1000, Phaser.Easing.Quadratic.InOut, false, 0, 0, true);
+            holeTween.onComplete.add(squeezeBlackHole);
+            game.time.events.add(Phaser.Timer.HALF, checkShuttlePosition, this);
         }
     }
 
-    function createRay() {
-        var posX = shuttle.x + shuttle.width * (0.6-0.2) * Math.cos(shuttle.rotation);
-        var posY = shuttle.y + shuttle.width * (0.6-0.2) * Math.sin(shuttle.rotation);
-        var ray = game.add.sprite(posX, posY, "ray");
-        ray.width *= objScale;
-        ray.height *= objScale;
-        ray.rotation = shuttle.rotation;
-        game.physics.arcade.enable(ray);
-        game.physics.arcade.velocityFromAngle(ray.rotation * 180/Math.PI, 800 * objScale, ray.body.velocity);
-        rays.push(ray);
+    function shiftBlackHole() {
+        hole.scale.y *= -1;
+        holeMaxScaleY *= -1;
+        holeTween = game.add.tween(hole.scale).to({ y: holeMaxScaleY }, 800, Phaser.Easing.Quadratic.OutIn, false, 0, 0, false);
+        holeTween.onComplete.add(squeezeBlackHole);
+    }
 
-        if (gameStart) {
-            game.time.events.add(Phaser.Timer.HALF, createRay, this);
+    function changeShuttle(isNorth) {
+        if (shuttleTween !== undefined && shuttleTween.isRunning) {
+            return;
+        }
+
+        if (isNorth) {
+            if (shuttlePos !== 1) {
+                shuttlePos = 1;
+                shuttleTween = game.add.tween(shuttle.scale).to({ y: 0 }, 100, Phaser.Easing.Quadratic.InOut, true, 0, 0, false);
+                shuttleTween.onComplete.add(function() {
+                    shuttle.loadTexture("shuttle-n");
+                    game.add.tween(shuttle.scale).to({ y: shuttleMaxScaleY }, 100, Phaser.Easing.Quadratic.OutIn, true, 0, 0, false);
+                });
+            }
+        } else {
+            if (shuttlePos !== -1) {
+                shuttlePos = -1;
+                shuttleTween = game.add.tween(shuttle.scale).to({ y: 0 }, 100, Phaser.Easing.Quadratic.InOut, true, 0, 0, false);
+                shuttleTween.onComplete.add(function() {
+                    shuttle.loadTexture("shuttle-s");
+                    game.add.tween(shuttle.scale).to({ y: shuttleMaxScaleY }, 100, Phaser.Easing.Quadratic.OutIn, true, 0, 0, false);
+                });
+            }
+        }
+    }
+
+    function checkShuttlePosition() {
+        if (Math.sign(hole.scale.y) * shuttlePos < 0) {
+            if (shuttle.key !== "shuttle-q") {
+                confuseStartTime = new Date();
+                shuttle.loadTexture("shuttle-q");
+            }
+            var t = new Date();
+            game.add.tween(shuttle.scale).to({ x: shuttleMaxScaleX*1.2 }, 500, Phaser.Easing.Quadratic.InOut, true, 0, 3, true);
+            if (t - confuseStartTime > 500 * (3+1)) {
+                onShuttleCrashed();
+            }
+        } else {
+            if (shuttlePos === 1) {
+                shuttle.loadTexture("shuttle-n");
+            } else {
+                shuttle.loadTexture("shuttle-s");
+            }
         }
     }
 
     function onShuttleCrashed() {
         if (!gameOver) {
             var exp = [];
-            for (var i = 0; i < 16; i++) exp.push(i+32);
+            for (var i = 0; i < 16; i++) exp.push(i+64);
             for (var i = 0; i < 30; i++) {
                 game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2), function() {
                     var posX = shuttle.x + (Math.random()-0.8) * shuttle.width * 1.2;
@@ -288,32 +322,9 @@
                 }, this);
             }
         }
+
         gameOver = true;
         gameStart = false;
-    }
-
-    function onDestroyEnemy(enemyIdx, rayIdx) {
-        var enemy = enemies[enemyIdx];
-        var ray = rays[rayIdx];
-
-        enemies.splice(enemyIdx, 1);
-        rays.splice(rayIdx, 1);
-
-        var midX = enemy.x + enemy.width / 2;
-        var midY = enemy.y + enemy.height / 2;
-        var posX = midX + (Math.random()-0.8) * enemy.width * 1.2;
-        var posY = midY + (Math.random()-0.8) * enemy.height * 1.2;
-        var explosion = game.add.sprite(posX, posY, "explosion", 0);
-        explosion.width *= 0.8;
-        explosion.height *= 0.8;
-        explosion.animations.add("exp" + Math.round(enemy.x), expIdx[0], 20, false);
-        explosion.play("exp" + Math.round(enemy.x), null, false, true);
-
-        enemy.destroy();
-        ray.destroy();
-
-        score++;
-        scoreTxt.text = score + " ";
     }
 
 })();

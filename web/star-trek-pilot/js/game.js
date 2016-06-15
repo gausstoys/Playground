@@ -20,16 +20,27 @@
     var gameStart = false;
     var gameOver = false;
     var first = true;
+    var balanced = false;
+    var balanceCnt = 0;
+    var imbalanceCnt = 0;
 
     // game score
     var score = 0;
     var startTime;
 
     // game objects
-    var shuttle;
-    var rocks = [];
-    var explosions = [];
-    var MAX_VELOCITY = 300;
+    var bgImg;
+    var horiz;
+    var bgTween;
+    var pilot;
+    var meter;
+    var warning;
+
+    // rotate angle
+    var lastAngle = 0;
+    var UNIT_ANGLE = 25;
+    var MAX_ANGLE = 90;
+    var MAX_VELOCITY = 50;
 
     // tutorial objects
     var graphics;
@@ -49,27 +60,45 @@
     var connectTxt;
 
     function preload() {
-        game.load.image("rock", "img/ex01-03.png");
-        game.load.image("shuttle", "img/ex01-02.png");
-        game.load.image("bg", "img/ex01-01.png");
-        game.load.image("tutorial", "img/tutorial-2d.png");
-        game.load.spritesheet("explosion", "img/explosions.png", 64, 64);
+        game.load.image("bg", "img/ex05-01.png");
+        game.load.image("pilot", "img/ex05-02.png");
+        game.load.image("horiz", "img/ex05-03.png");
+        game.load.image("meter", "img/ex05-04.png");
+        game.load.image("tutorial", "img/tutorial-tilt.png")
     }
 
     function create() {
         gs = new GaussSense();
 
         // add background image
-        var bgImg = game.add.image(0, 0, "bg");
+        bgImg = game.add.sprite(w / 2, h * 0.8, "bg");
         bgImg.width = w;
-        bgImg.height = h;
+        bgImg.height *= w/bgImg.width;
+        bgImg.anchor.set(0.5, 0.7);
+        game.physics.arcade.enable(bgImg);
+        horiz = game.add.sprite(w / 2 - 10*objScale, h * 0.7, "horiz");
+        var ratio = horiz.height/horiz.width;
+        horiz.width = w * 0.82;
+        horiz.height = horiz.width * ratio;
+        horiz.anchor.set(0.5, 0);
 
-        // add space shuttle
-        shuttle = game.add.sprite(100 * objScale, 400 * objScale, "shuttle");
-        shuttle.width *= objScale;
-        shuttle.height *= objScale;
-        game.physics.arcade.enable(shuttle);
-        shuttle.body.setCircle(shuttle.height*0.8, (shuttle.width-shuttle.height*0.8)*0.5, 0);
+        // add pilot
+        pilot = game.add.image(w / 2, h * 0.7, "pilot");
+        pilot.width = w;
+        pilot.height = h;
+        pilot.anchor.set(0.5, 0.7);
+        meter = game.add.image(w / 2 - 10*objScale, h * 0.7, "meter");
+        var ratio = meter.height/meter.width;
+        meter.width = w * 0.82;
+        meter.height = meter.width * ratio;
+        meter.anchor.set(0.5, 0);
+
+        // Red warning mask
+        warning = game.add.graphics(0, 0);
+        warning.beginFill(0xFF0000, 0.2);
+        warning.drawRect(0, 0, w, h);
+        warning.endFill();
+        warning.visible = false;
 
         // add tutorial
         graphics = game.add.graphics(0, 0);
@@ -85,12 +114,11 @@
 
         var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
         tutorialTxt = game.add.text(w * 0.4, h * 0.5,
-            "MOVE THE MAGNET IN X/Y\nDIRECTIONS TO CONTROL\nYOUR SHUTTLE.", tutorialTxtStyle);
+            "TILT THE MAGNET TO\nSTAY BALANCED ON \nYOUR JOURNEY.", tutorialTxtStyle);
         tutorialTxt.anchor.set(0, 0.5);
 
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
-        cursors = game.input.keyboard.createCursorKeys();
 
         // add display texts
         var startTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 60 * objScale };
@@ -129,6 +157,7 @@
             if (gameStart) {
                 game.paused = true;
             }
+            bgImg.body.angularVelocity = 0;
             return;
         } else {
             connectTxt.visible = false;
@@ -140,32 +169,31 @@
             }
 
             var mid = gs.getBipolarMidpoint();
-            // console.log(mid.x, mid.y);
 
-            // shuttle movements
-            shuttle.body.velocity.x = 0;
-            shuttle.body.velocity.y = 0;
-            if ((mid.y < 0.3 && mid.y > 0 || cursors.up.isDown) && shuttle.y > margin) {
-                shuttle.body.velocity.y = -500 * objScale;
-            }
-            if ((mid.y > 0.7 || cursors.down.isDown) && shuttle.y < h - shuttle.height - margin) {
-                shuttle.body.velocity.y = 500 * objScale;
-            }
-            if ((mid.x > 0.7 || cursors.right.isDown) && shuttle.x < w - shuttle.width - margin) {
-                shuttle.body.velocity.x = 500 * objScale;
-            }
-            if ((mid.x < 0.3 && mid.x > 0 || cursors.left.isDown) && shuttle.x > margin) {
-                shuttle.body.velocity.x = -500 * objScale;
+            var ang = mid.pitch * 2;
+            if (Math.abs(ang) > 10) {
+                if (bgImg.angle > 80) {
+                    ang = (ang < 0)? 0 : ang;
+                } else if (bgImg.angle < -80) {
+                    ang = (ang > 0)? 0 : ang;
+                }
+                bgImg.angle -= ang/100;
             }
 
-            // start creating rocks
             if (first) {
-                game.time.events.add(Phaser.Timer.SECOND * 2, createRock, this);
+                game.time.events.add(Phaser.Timer.SECOND * 2, createRotation, this);
                 first = false;
             }
 
-            // check collision
-            game.physics.arcade.overlap(shuttle, rocks, onShuttleCrashed);
+            // check if angle exceed 80 or -80
+            if (bgImg.angle > 80) {
+                bgImg.body.angularVelocity = -Math.abs(bgImg.body.angularVelocity);
+            } else if (bgImg.angle < -80) {
+                bgImg.body.angularVelocity = Math.abs(bgImg.body.angularVelocity);
+            }
+
+            // check balance
+            checkBalance();
 
             // show score
             var now = new Date();
@@ -175,12 +203,15 @@
             }
             game.world.bringToTop(scoreTxt);
 
-            for (var i = 0; i < explosions.length; i++) {
-               explosions[i].destroy();
-            }
-
         } else if (gameOver) {
             showGameOver();
+
+            if (bgImg.angle > 45) {
+                bgImg.body.angularVelocity = -5;
+            } else if (bgImg.angle < -45) {
+                bgImg.body.angularVelocity = 5;
+            }
+            horiz.angle = bgImg.angle;
 
             if (spaceKey.isDown) {
                 resetGame();
@@ -191,26 +222,16 @@
                 resetGame();
             }
         }
-
-        // rocks movements
-        for (var i = 0; i < rocks.length; i++) {
-            if (rocks[i].x < -rocks[i].width * 1.25 - margin) {
-                rocks[i].destroy();
-                rocks.splice(i, 1);
-                i--;
-            }
-        }
     }
 
     function resetGame() {
-        for (var i = 0; i < explosions.length; i++) {
-            explosions[i].destroy();
-        }
-        shuttle.x = 100 * objScale;
-        shuttle.y = 400 * objScale;
         gameStart = true;
         gameOver = false;
         first = true;
+        bgImg.angle = 0;
+        bgImg.body.angularVelocity = 0;
+
+        warning.visible = false;
         startTxt.visible = false;
         ggTxt.visible = false;
         ggScoreTxt.visible = false;
@@ -223,7 +244,6 @@
 
     function showGameOver() {
         if (!ggTxt.visible) {
-
             ggTxt.visible = true;
             ggScoreTxt.text = "SCORE: " + score;
             ggScoreTxt.visible = true;
@@ -243,44 +263,43 @@
         tutorialDestroyed = true;
     }
 
-    function createRock() {
-        var rock = game.add.sprite(w, Math.random() * h, "rock");
-        var size = Math.random() + 1;
-        rock.width *= objScale * size;
-        rock.height *= objScale * size;
-        game.physics.arcade.enable(rock);
-        rock.body.setSize(rock.width*0.8, rock.height*0.8, rock.width*0.1, rock.height*0.1);
-
-        var baseVelocity = (score + 200 > MAX_VELOCITY)? MAX_VELOCITY : score + 200;
-        rock.body.velocity.x = -(Math.random()*200 + baseVelocity) * objScale;
-        rocks.push(rock);
+    function createRotation() {
+        var baseVelocity = (score + 5 > MAX_VELOCITY)? MAX_VELOCITY : score + 5;
+        bgImg.body.angularVelocity = Math.sign(Math.random() - 0.5) * (Math.random()*baseVelocity + 5);
 
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*(3-baseVelocity/MAX_VELOCITY/2)+1), createRock, this);
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*(4-baseVelocity/MAX_VELOCITY/2)+1), createRotation, this);
+        }
+    }
+
+    function checkBalance() {
+        balanced = (Math.abs(bgImg.angle) < 5)? true : false;
+        if (!balanced) {
+            balanceCnt = 0;
+            imbalanceCnt++;
+            horiz.angle = bgImg.angle;
+        } else {
+            balanceCnt++;
+            if (balanceCnt > 10) {
+                imbalanceCnt = 0;
+                warning.visible = false;
+            }
+            horiz.angle = 0;
+        }
+        if (imbalanceCnt > 100) {
+            if (imbalanceCnt % 10 == 0) {
+                warning.visible = !warning.visible;
+            }
+        }
+        if (imbalanceCnt > 300) {
+            warning.visible = true;
+            imbalanceCnt = 0;
+            balanceCnt = 0;
+            onShuttleCrashed();
         }
     }
 
     function onShuttleCrashed() {
-        shuttle.body.velocity.x = 0;
-        shuttle.body.velocity.y = 0;
-        if (!gameOver) {
-            var exp1 = [];
-            for (var i = 0; i < 16; i++) exp1.push(i+32);
-            for (var i = 0; i < 30; i++) {
-                game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2), function() {
-                    var midX = shuttle.x + shuttle.width / 2;
-                    var midY = shuttle.y + shuttle.height / 2;
-                    var posX = midX + (Math.random()-0.8) * shuttle.width * 1.2;
-                    var posY = midY + (Math.random()-0.8) * shuttle.height * 1.2;
-                    var explosion = game.add.sprite(posX, posY, "explosion", 32);
-                    explosion.width *= Math.random() + 1;
-                    explosion.height = explosion.width;
-                    explosion.animations.add("exp1", exp1, 10, false);
-                    explosion.play("exp1");
-                    explosions.push(explosion);
-                }, this);
-            }
-        }
         gameOver = true;
         gameStart = false;
     }
