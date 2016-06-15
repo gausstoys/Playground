@@ -199,9 +199,6 @@
             }
 
         } else if (gameOver) {
-            rockUpTimerEvent.loop = false;
-            rockDownTimerEvent.loop = false;
-
             shuttle.body.velocity.y = 0;
             for (var i = 0; i < rocks.length; i++) rocks[i].body.velocity.x = 0;
 
