@@ -6,12 +6,12 @@
     var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
     var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
     if (w > maxW) w = maxW;
-    if (w * 2/3 > h) {
-        w = h * 3/2;
+    if (w * 2 / 3 > h) {
+        w = h * 3 / 2;
     } else {
-        h = w * 2/3;
+        h = w * 2 / 3;
     }
-    var objScale = w/maxW/2;
+    var objScale = w / maxW / 2;
     var margin = 30 * objScale;
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, pauseUpdate: pauseUpdate });
     var time = new Phaser.Time(game);
@@ -58,6 +58,7 @@
 
     function create() {
         gs = new GaussSense();
+        // gs = new GaussSense("http://192.168.170.234:5100"); // for mobile
 
         // add background image
         var bgImg = game.add.image(0, 0, "bg");
@@ -69,7 +70,7 @@
         shuttle.width *= objScale;
         shuttle.height *= objScale;
         game.physics.arcade.enable(shuttle);
-        shuttle.body.setCircle(shuttle.height*0.8, (shuttle.width-shuttle.height*0.8)*0.5, 0);
+        shuttle.body.setCircle(shuttle.height * 0.8, (shuttle.width - shuttle.height * 0.8) * 0.5, 0);
 
         // add tutorial
         graphics = game.add.graphics(0, 0);
@@ -94,11 +95,11 @@
 
         // add display texts
         var startTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 60 * objScale };
-        startTxt = game.add.text(game.world.centerX, game.world.centerY + 400*objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
+        startTxt = game.add.text(game.world.centerX, game.world.centerY + 400 * objScale, "PRESS \"SPACE\" TO START", startTxtStyle);
         startTxt.anchor.set(0.5);
         startTxt.visible = false;
         var scoreTxtStyle = { fill: "#fff000", align: "right", fontStyle: "italic", fontSize: 140 * objScale };
-        scoreTxt = game.add.text(w - 150*objScale, 150 * objScale, "", scoreTxtStyle);
+        scoreTxt = game.add.text(w - 150 * objScale, 150 * objScale, "", scoreTxtStyle);
         scoreTxt.anchor.set(0.5);
         scoreTxt.visible = false;
         var ggTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 120 * objScale };
@@ -106,7 +107,7 @@
         ggTxt.anchor.set(0.5);
         ggTxt.visible = false;
         var ggScoreTxtStyle = { fill: "#fdcf58", align: "center", fontSize: 100 * objScale };
-        ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200*objScale, "", ggScoreTxtStyle);
+        ggScoreTxt = game.add.text(game.world.centerX, game.world.centerY + 200 * objScale, "", ggScoreTxtStyle);
         ggScoreTxt.anchor.set(0.5);
         ggScoreTxt.visible = false;
         var connectTxtStyle = { fill: "#ffffff", align: "center", fontSize: 80 * objScale };
@@ -176,18 +177,18 @@
             game.world.bringToTop(scoreTxt);
 
             for (var i = 0; i < explosions.length; i++) {
-               explosions[i].destroy();
+                explosions[i].destroy();
             }
 
         } else if (gameOver) {
             showGameOver();
 
-            if (spaceKey.isDown) {
+            if (spaceKey.isDown || game.input.pointer1.isDown) {
                 resetGame();
             }
         } else {
             startTxt.visible = true;
-            if (spaceKey.isDown) {
+            if (spaceKey.isDown || game.input.pointer1.isDown) {
                 resetGame();
             }
         }
@@ -249,14 +250,14 @@
         rock.width *= objScale * size;
         rock.height *= objScale * size;
         game.physics.arcade.enable(rock);
-        rock.body.setSize(rock.width*0.8, rock.height*0.8, rock.width*0.1, rock.height*0.1);
+        rock.body.setSize(rock.width * 0.8, rock.height * 0.8, rock.width * 0.1, rock.height * 0.1);
 
-        var baseVelocity = (score + 200 > MAX_VELOCITY)? MAX_VELOCITY : score + 200;
-        rock.body.velocity.x = -(Math.random()*200 + baseVelocity) * objScale;
+        var baseVelocity = (score + 200 > MAX_VELOCITY) ? MAX_VELOCITY : score + 200;
+        rock.body.velocity.x = -(Math.random() * 200 + baseVelocity) * objScale;
         rocks.push(rock);
 
         if (gameStart) {
-            game.time.events.add(Phaser.Timer.SECOND * (Math.random()*(3-baseVelocity/MAX_VELOCITY/2)+1), createRock, this);
+            game.time.events.add(Phaser.Timer.SECOND * (Math.random() * (3 - baseVelocity / MAX_VELOCITY / 2) + 1), createRock, this);
         }
     }
 
@@ -265,13 +266,13 @@
         shuttle.body.velocity.y = 0;
         if (!gameOver) {
             var exp1 = [];
-            for (var i = 0; i < 16; i++) exp1.push(i+32);
+            for (var i = 0; i < 16; i++) exp1.push(i + 32);
             for (var i = 0; i < 30; i++) {
-                game.time.events.add(Phaser.Timer.SECOND * (Math.random()*2), function() {
+                game.time.events.add(Phaser.Timer.SECOND * (Math.random() * 2), function() {
                     var midX = shuttle.x + shuttle.width / 2;
                     var midY = shuttle.y + shuttle.height / 2;
-                    var posX = midX + (Math.random()-0.8) * shuttle.width * 1.2;
-                    var posY = midY + (Math.random()-0.8) * shuttle.height * 1.2;
+                    var posX = midX + (Math.random() - 0.8) * shuttle.width * 1.2;
+                    var posY = midY + (Math.random() - 0.8) * shuttle.height * 1.2;
                     var explosion = game.add.sprite(posX, posY, "explosion", 32);
                     explosion.width *= Math.random() + 1;
                     explosion.height = explosion.width;
