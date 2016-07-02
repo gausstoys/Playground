@@ -79,15 +79,18 @@
         graphics.drawRoundedRect(w * 0.15, h * 0.25, w * 0.7, h * 0.65, 10 * objScale);
         graphics.endFill();
 
-        tutorial = game.add.image(w * 0.2, h * 0.5, "tutorial");
-        tutorial.width *= objScale * 1.2;
-        tutorial.height *= objScale * 1.2;
-        tutorial.anchor.set(0, 0.5);
+        // tutorial = game.add.image(w * 0.2, h * 0.5, "tutorial");
+        // tutorial.width *= objScale * 1.2;
+        // tutorial.height *= objScale * 1.2;
+        // tutorial.anchor.set(0, 0.5);
 
         var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
-        tutorialTxt = game.add.text(w * 0.4, h * 0.5,
+        // tutorialTxt = game.add.text(w * 0.4, h * 0.5,
+        //     "MOVE THE MAGNET IN X/Y\nDIRECTIONS TO CONTROL\nYOUR SHUTTLE.", tutorialTxtStyle);
+        tutorialTxt = game.add.text(w / 2, h * 0.5,
             "MOVE THE MAGNET IN X/Y\nDIRECTIONS TO CONTROL\nYOUR SHUTTLE.", tutorialTxtStyle);
-        tutorialTxt.anchor.set(0, 0.5);
+        // tutorialTxt.anchor.set(0, 0.5);
+        tutorialTxt.anchor.set(0.5, 0.5);
 
         // register key events
         spaceKey = game.input.keyboard.addKey(32);
@@ -140,22 +143,23 @@
                 destroyTutorial();
             }
 
-            var mid = gs.getBipolarMidpoint();
+            // var mid = gs.getBipolarMidpoint();
+            var north = gs.getNorthPoint();
             // console.log(mid.x, mid.y);
 
             // shuttle movements
             shuttle.body.velocity.x = 0;
             shuttle.body.velocity.y = 0;
-            if ((mid.y < 0.3 && mid.y > 0 || cursors.up.isDown) && shuttle.y > margin) {
+            if ((north.y < 0.3 && north.y > 0 || cursors.up.isDown) && shuttle.y > margin) {
                 shuttle.body.velocity.y = -500 * objScale;
             }
-            if ((mid.y > 0.7 || cursors.down.isDown) && shuttle.y < h - shuttle.height - margin) {
+            if ((north.y > 0.7 || cursors.down.isDown) && shuttle.y < h - shuttle.height - margin) {
                 shuttle.body.velocity.y = 500 * objScale;
             }
-            if ((mid.x > 0.7 || cursors.right.isDown) && shuttle.x < w - shuttle.width - margin) {
+            if ((north.x > 0.7 || cursors.right.isDown) && shuttle.x < w - shuttle.width - margin) {
                 shuttle.body.velocity.x = 500 * objScale;
             }
-            if ((mid.x < 0.3 && mid.x > 0 || cursors.left.isDown) && shuttle.x > margin) {
+            if ((north.x < 0.3 && north.x > 0 || cursors.left.isDown) && shuttle.x > margin) {
                 shuttle.body.velocity.x = -500 * objScale;
             }
 

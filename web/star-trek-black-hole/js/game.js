@@ -163,11 +163,10 @@
 
             // shuttle movements
             if (north.intensity > 20) {
-                changeShuttle(true);
-            } else if (south.intensity < -20) {
                 changeShuttle(false);
+            } else if (south.intensity < -20) {
+                changeShuttle(true);
             }
-            // console.log(north.x, north.y);
 
             // shift blackHole
             if (!holeTween.isRunning) {
@@ -259,12 +258,12 @@
         holeTween.onComplete.add(squeezeBlackHole);
     }
 
-    function changeShuttle(isNorth) {
+    function changeShuttle(isSouth) {
         if (shuttleTween !== undefined && shuttleTween.isRunning) {
             return;
         }
 
-        if (isNorth) {
+        if (isSouth) {
             if (shuttlePos !== 1) {
                 shuttlePos = 1;
                 shuttleTween = game.add.tween(shuttle.scale).to({ y: 0 }, 100, Phaser.Easing.Quadratic.InOut, true, 0, 0, false);
