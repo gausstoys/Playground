@@ -265,7 +265,7 @@
 
     function destroyTutorial() {
         graphics.destroy();
-        tutorial.destroy();
+        // tutorial.destroy();
         tutorialTxt.destroy();
         tutorialDestroyed = true;
     }
