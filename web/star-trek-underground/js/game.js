@@ -37,6 +37,9 @@
     var explosions = [];
     var MAX_VELOCITY = 200;
 
+    var bigRockLastTime = new Date();
+    var bigRockInterval = 1000;
+
     // tutorial objects
     var graphics;
     var tutorial;
@@ -288,6 +291,15 @@
         };
         var idx = Math.floor(Math.random() * rockTypes.length);
 
+        if (idx === 0) {
+            var current = new Date();
+            if ((current - bigRockLastTime) > bigRockInterval) {
+                bigRockLastTime = current;
+            } else {
+                idx = 1;
+            }
+        }
+
         var rock = game.add.sprite(0, 0, "rock-" + rockTypes[idx]);
         rock.width *= objScale * 1.2;
         rock.height *= objScale * 1.2;
@@ -323,6 +335,16 @@
         };
 
         var idx = Math.floor(Math.random() * rockTypes.length);
+
+        if (idx === 0) {
+            var current = new Date();
+            if ((current - bigRockLastTime) > bigRockInterval) {
+                bigRockLastTime = current;
+            } else {
+                idx = 1;
+            }
+        }
+
         var rock = game.add.sprite(0, 0, "rock-" + rockTypes[idx]);
         rock.width *= rockScale;
         rock.height *= rockScale;
