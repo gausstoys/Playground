@@ -21,7 +21,6 @@
     var time = new Phaser.Time(game);
 
 
-
     // game logic
     var gameStart = false;
     var gameOver = false;
@@ -95,7 +94,7 @@
         shuttle.width *= objScale;
         shuttle.height *= objScale;
         shuttle.x = shuttle.width;
-        shuttle.y = h/2;
+        shuttle.y = h/4;
         // space shuttle physics
         game.physics.p2.enableBody(shuttle, false);
         shuttle.body.motionState = Phaser.KINEMATIC;
@@ -186,13 +185,14 @@
             // console.log("Midpoint Intensity: ", mid.intensity);
 
             // shuttle movements
-            if (north.intensity > 0) {
-                moveShuttle(north.intensity);
+            if (north.intensity > 10) {
+                moveShuttle(north.intensity-10);
             } else {
                 buffer = 0;
                 shuttle.body.velocity.y = 0;
-                if (shuttle.y > h/2 + margin*objScale) shuttle.body.velocity.y = -100;
-                if (shuttle.y < h/2 - margin*objScale) shuttle.body.velocity.y = 100;
+                if (shuttle.y > h/4) shuttle.body.velocity.y = -100;
+                // if (shuttle.y > h/4 + margin*objScale) shuttle.body.velocity.y = -100;
+                // if (shuttle.y < h/2 - margin*objScale) shuttle.body.velocity.y = 100;
             }
 
             // start creating rocks
@@ -204,7 +204,7 @@
 
             if (!gameEnding) {
                 var now = new Date();
-                if (now - startTime > 10000) {
+                if (now - startTime > 25000) {
                     gameEnding = true;
                 }
             } else {
@@ -269,7 +269,7 @@
         }
         rocks = [];
         shuttle.x = shuttle.width;
-        shuttle.y = h / 2;
+        shuttle.y = h / 4;
 
         gameStart = true;
         gameOver = false;
@@ -428,8 +428,10 @@
         if (intensity > MAX_INTENSITY) intensity = MAX_INTENSITY;
 
         buffer++;
-        if (buffer > 15) {
-            var newY = h/2 + (Math.round(intensity)-MAX_INTENSITY/2)/MAX_INTENSITY * shuttle.height*4;
+        if (buffer > 0) {
+            // var newY = h/2 + (Math.round(intensity)-MAX_INTENSITY/2)/MAX_INTENSITY * shuttle.height*4;
+            var newY = h/4 + Math.round(intensity)/MAX_INTENSITY * shuttle.height*3;
+            if (newY > h/4 * 3) newY = h/4 * 3;
             if (Math.abs(shuttle.y - newY) > 1) {
                 shuttle.body.y = newY;
             }
