@@ -117,11 +117,11 @@
         // tutorial.height *= objScale * 1.2;
         // tutorial.anchor.set(0, 0.5);
 
-        var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 60 * objScale };
+        var tutorialTxtStyle = { fill: "#404040", align: "left", fontSize: 80 * objScale };
         // tutorialTxt = game.add.text(w * 0.4, h * 0.5,
         //     "CONTROL THE HEIGHT OF \nTHE MAGNET TO PILOT\nYOUR SHUTTLE.", tutorialTxtStyle);
         tutorialTxt = game.add.text(w / 2, h * 0.5,
-            "挑戰用磁鐵來控制飛碟\n把磁鐵往下壓或是拿起來", tutorialTxtStyle);
+            "挑戰小心控制飛碟\n不要撞到大石頭", tutorialTxtStyle);
         // tutorialTxt.anchor.set(0, 0.5);
         tutorialTxt.anchor.set(0.5, 0.5);
 
