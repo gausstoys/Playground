@@ -41,7 +41,7 @@
     var MAX_VELOCITY = 200;
 
     var bigRockLastTime = new Date();
-    var bigRockInterval = 1000;
+    var bigRockInterval = 4000;
 
     // tutorial objects
     var graphics;
@@ -94,7 +94,7 @@
         shuttle.width *= objScale;
         shuttle.height *= objScale;
         shuttle.x = shuttle.width;
-        shuttle.y = h/4;
+        shuttle.y = h/3;
         // space shuttle physics
         game.physics.p2.enableBody(shuttle, false);
         shuttle.body.motionState = Phaser.KINEMATIC;
@@ -190,7 +190,7 @@
             } else {
                 buffer = 0;
                 shuttle.body.velocity.y = 0;
-                if (shuttle.y > h/4) shuttle.body.velocity.y = -100;
+                if (shuttle.y > h/3) shuttle.body.velocity.y = -100;
                 // if (shuttle.y > h/4 + margin*objScale) shuttle.body.velocity.y = -100;
                 // if (shuttle.y < h/2 - margin*objScale) shuttle.body.velocity.y = 100;
             }
@@ -269,7 +269,7 @@
         }
         rocks = [];
         shuttle.x = shuttle.width;
-        shuttle.y = h / 4;
+        shuttle.y = h / 3;
 
         gameStart = true;
         gameOver = false;
@@ -337,8 +337,8 @@
     function createRockUp() {
         var rockTypes = ["up-1", "up-2"];
         var rockPolygon = {
-            "up-1": [[-150*rockScale, -240*rockScale], [150*rockScale, -240*rockScale], [0, 200*rockScale]],
-            "up-2": [[-120*rockScale, -160*rockScale], [120*rockScale, -160*rockScale], [0, 130*rockScale]]
+            "up-1": [[-150*rockScale, -240*rockScale], [150*rockScale, -240*rockScale], [0, 140*rockScale]],
+            "up-2": [[-120*rockScale, -160*rockScale], [120*rockScale, -160*rockScale], [0, 100*rockScale]]
         };
         var idx = Math.floor(Math.random() * rockTypes.length);
 
@@ -381,8 +381,8 @@
     function createRockDown() {
         var rockTypes = ["down-1", "down-2"];
         var rockPolygon = {
-            "down-1": [[-150*rockScale, 220*rockScale], [150*rockScale, 220*rockScale], [0, -200*rockScale]],
-            "down-2": [[-120*rockScale, 140*rockScale], [120*rockScale, 140*rockScale], [0, -120*rockScale]]
+            "down-1": [[-150*rockScale, 220*rockScale], [150*rockScale, 220*rockScale], [0, -140*rockScale]],
+            "down-2": [[-120*rockScale, 140*rockScale], [120*rockScale, 140*rockScale], [0, -100*rockScale]]
         };
 
         var idx = Math.floor(Math.random() * rockTypes.length);
@@ -430,8 +430,8 @@
         buffer++;
         if (buffer > 0) {
             // var newY = h/2 + (Math.round(intensity)-MAX_INTENSITY/2)/MAX_INTENSITY * shuttle.height*4;
-            var newY = h/4 + Math.round(intensity)/MAX_INTENSITY * shuttle.height*3;
-            if (newY > h/4 * 3) newY = h/4 * 3;
+            var newY = h/3 + Math.round(intensity)/MAX_INTENSITY * shuttle.height*3;
+            if (newY > h/3 * 2) newY = h/3 * 2;
             if (Math.abs(shuttle.y - newY) > 1) {
                 shuttle.body.y = newY;
             }
