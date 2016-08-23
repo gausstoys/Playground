@@ -3,6 +3,7 @@
     <head>
         <title>N/S particles - Basic GaussSense</title>
         <link rel="stylesheet" href="css/example.css">
+        <link rel="stylesheet" href="css/animate.css">
         <style type="text/css">
             html, body {
                 background: #222;
@@ -30,6 +31,8 @@
                 <a href="https://github.com/soulwire/sketch.js" target="_blank">View on Github</a>
             </nav>
         </header>
+        <script src="js/jquery-3.1.0.min.js"></script>
+        <script src="js/jquery.noty.packaged.min.js"></script>
         <script src="js/sketch.min.js"></script>
         <script src="http://gausstoys.com/libs/gausssense.js"></script>
         <script>
@@ -103,6 +106,7 @@
         });
 
         var gs;
+        var gsNotification;
 
         demo.setup = function() {
 
@@ -116,6 +120,10 @@
             }
 
             gs = new GaussSense();
+
+            var gsDetectionInterval = setInterval(function(){
+                checkGaussSense();
+            }, 2000);
         };
 
         demo.spawn = function( x, y, polar ) {
@@ -215,6 +223,39 @@
 
             // }
         };
+
+        function checkGaussSense() {
+            if(!gs.isConnected()) {
+                openNotification('GaussSense is not detected.');
+            }
+            else {
+                closeNotification();
+            }
+        }
+
+
+        function openNotification(text) {
+            if(!gsNotification) {
+                gsNotification = noty({
+                  layout: 'topRight',
+                  text: text,
+                  theme: 'relax', // or 'relax'
+                  type: '',
+                  closeWith: [],
+                  animation: {
+                      open: 'animated flipInX', // Animate.css class names
+                      close: 'animated flipOutX' // Animate.css class names
+                  }
+                });
+            }
+        }
+
+        function closeNotification() {
+            if(gsNotification) {
+                gsNotification.close();
+                gsNotification = null;
+            }
+        }
         
         </script>
     </body>
