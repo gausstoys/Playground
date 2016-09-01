@@ -41,13 +41,10 @@
 			var preNorthPoints = [];
 			var preSouthPoints = [];
 
-
-			
 			Main();
 			
 			function Main() {
 				gs = new GaussSense();
-
 
 				canvas = document.getElementById("testCanvas");
 				canvas.width = window.innerWidth;
@@ -66,8 +63,6 @@
 					canvas.height = window.innerHeight;
 					crossZoneBehaviour.reset(new Proton.RectZone(0, 0, canvas.width, canvas.height), 'cross');
 				}
-
-				
 			}
 
 			function addStats() {
@@ -149,7 +144,7 @@
 				renderer.onParticleUpdate = function(particle) {
 					context.beginPath();
 					context.strokeStyle = particle.color;
-					context.lineWidth = 2;
+					context.lineWidth = 3;
 					context.moveTo(particle.old.p.x, particle.old.p.y);
 					context.lineTo(particle.p.x, particle.p.y);
 					context.closePath();
@@ -161,10 +156,14 @@
 
 			function tick() {
 				requestAnimationFrame(tick);
-
-
+				
 				var northPoints = gs.getNorthGaussBits();
 				var southPoints = gs.getSouthGaussBits();
+
+				var offset = 215;
+				var sensorWidth = 850;
+        var xOffset = 20;
+        var yOffset = -340;
 
 				if(preNorthPoints.length == 0 && northPoints.length > 0) {
 					attractionBehaviour.reset(northObj, 10, 1200);
@@ -174,11 +173,9 @@
 				}
 
 				if(northPoints.length == 1) {
-					northObj.x = northPoints[0].x*800 + 300;
-					northObj.y = northPoints[0].y*800 + 50;
+					northObj.x = northPoints[0].x*sensorWidth + offset + xOffset;
+					northObj.y = northPoints[0].y*sensorWidth + offset + yOffset;
 				}
-
-
 
 				if(preSouthPoints.length == 0 && southPoints.length > 0) {
 					attractionBehaviour2.reset(southObj, 10, 1200);
@@ -188,11 +185,9 @@
 				}
 
 				if(southPoints.length == 1) {
-					southObj.x = southPoints[0].x*800 + 300;
-					southObj.y = southPoints[0].y*800 + 50;
+					southObj.x = southPoints[0].x*sensorWidth + offset + xOffset;
+					southObj.y = southPoints[0].y*sensorWidth + offset + yOffset;
 				}
-
-
 
 				preNorthPoints = northPoints.slice();
 				preSouthPoints = southPoints.slice();
