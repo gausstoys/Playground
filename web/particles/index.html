@@ -14,7 +14,7 @@
                 height: 800px;
                 border: 1px dashed #52616B;
                 margin: 0 auto;
-                margin-top: 22px;
+                /*margin-top: 22px;*/
             }
         </style>
     </head>
@@ -157,37 +157,57 @@
 
         demo.update = function() {
 
-            var sensorWidth = 800;
+            var sensorWidth = 850;
+            var xOffset = -10;
+            var yOffset = -110;
             if(gs.isConnected()) {
-                var midPoint = gs.getBipolarMidpoint();
-                var northPoint = gs.getNorthPoint();
-                var southPoint = gs.getSouthPoint();
+                var northPoints = gs.getNorthGaussBits();
+                var southPoints = gs.getSouthGaussBits();
+                // var midPoint = gs.getBipolarMidpoint();
+                // var northPoint = gs.getNorthPoint();
+                // var southPoint = gs.getSouthPoint();
 
-                if(midPoint.intensity > 10) {
-                    var max = random( 1, 4 );
-                    for ( j = 0; j < max; j++ ) {
-                      demo.spawn( midPoint.x*sensorWidth, midPoint.y*sensorWidth);
-                    }
-                }
-                else {
+                for(var i=0; i<northPoints.length; i++) {
+                    var northPoint = northPoints[i];
                     if(northPoint.intensity > 10) {
-                        var max = random( 1, 4 );
+                        var max = random( 1, 2 );
                         for ( j = 0; j < max; j++ ) {
-                          demo.spawn( northPoint.x*sensorWidth, northPoint.y*sensorWidth, 0 );
-                        }
-                    }
-
-                    if(southPoint.intensity < -10) {
-                        var max = random( 1, 4 );
-                        for ( j = 0; j < max; j++ ) {
-                          demo.spawn( southPoint.x*sensorWidth, southPoint.y*sensorWidth, 1 );
+                          demo.spawn( northPoint.x*sensorWidth+xOffset, northPoint.y*sensorWidth+yOffset, 1 );
                         }
                     }
                 }
 
-                
+                for(var i=0; i<southPoints.length; i++) {
+                    var southPoint = southPoints[i];
+                    if(southPoint.intensity < -10) {
+                        var max = random( 1, 2 );
+                        for ( j = 0; j < max; j++ ) {
+                          demo.spawn( southPoint.x*sensorWidth+xOffset, southPoint.y*sensorWidth+yOffset, 0 );
+                        }
+                    }
+                }
 
+                // if(midPoint.intensity > 10) {
+                //     var max = random( 1, 4 );
+                //     for ( j = 0; j < max; j++ ) {
+                //       demo.spawn( midPoint.x*sensorWidth, midPoint.y*sensorWidth);
+                //     }
+                // }
+                // else {
+                //     if(northPoint.intensity > 10) {
+                //         var max = random( 1, 4 );
+                //         for ( j = 0; j < max; j++ ) {
+                //           demo.spawn( northPoint.x*sensorWidth, northPoint.y*sensorWidth, 0 );
+                //         }
+                //     }
 
+                //     if(southPoint.intensity < -10) {
+                //         var max = random( 1, 4 );
+                //         for ( j = 0; j < max; j++ ) {
+                //           demo.spawn( southPoint.x*sensorWidth, southPoint.y*sensorWidth, 1 );
+                //         }
+                //     }
+                // }
             }
 
             var i, particle;
