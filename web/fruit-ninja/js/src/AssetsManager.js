@@ -11,7 +11,7 @@ FruitGame.AssetsManager=function()
 	this.images={};
 	this.sounds={};
 	this.loader = new createjs.LoadQueue();
-	this.loader.installPlugin(createjs.Sound);
+	// this.loader.installPlugin(createjs.Sound);
 	var handleComplete=function()
 	{
 		var fruits=FruitGame.assets.fruits;
