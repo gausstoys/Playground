@@ -1,6 +1,6 @@
 (function() {
-    var w = 800;
-    var h = 800;
+    var w = 850;
+    var h = 850;
 
     // Phaser objects
     var game = new Phaser.Game(w, h, Phaser.AUTO, "", { preload: preload, create: create, update: update, render: render }, true);
