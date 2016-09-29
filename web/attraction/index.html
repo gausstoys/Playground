@@ -71,7 +71,7 @@
 				stats.domElement.style.position = 'absolute';
 				stats.domElement.style.left = '0px';
 				stats.domElement.style.top = '0px';
-				document.body.appendChild(stats.domElement);
+				// document.body.appendChild(stats.domElement);
 			}
 
 			function createProton() {
@@ -144,7 +144,7 @@
 				renderer.onParticleUpdate = function(particle) {
 					context.beginPath();
 					context.strokeStyle = particle.color;
-					context.lineWidth = 3;
+					context.lineWidth = 2;
 					context.moveTo(particle.old.p.x, particle.old.p.y);
 					context.lineTo(particle.p.x, particle.p.y);
 					context.closePath();
@@ -160,10 +160,10 @@
 				var northPoints = gs.getNorthGaussBits();
 				var southPoints = gs.getSouthGaussBits();
 
-				var offset = 215;
-				var sensorWidth = 850;
-        var xOffset = 20;
-        var yOffset = -340;
+				var offset = 0;
+				var sensorWidth = 840;
+        var xOffset = 460;
+        var yOffset = 30;
 
 				if(preNorthPoints.length == 0 && northPoints.length > 0) {
 					attractionBehaviour.reset(northObj, 10, 1200);
