@@ -784,9 +784,9 @@
 				var southPoints = gs.getSouthGaussBits();
 
 				var offset = 215;
-				var sensorWidth = 850;
-        var xOffset = 140;
-        var yOffset = -340;
+				var sensorWidth = 840;
+        var xOffset = 440 + 40;
+        var yOffset = 35;
 
 
         dragPointsList = [];
@@ -795,7 +795,7 @@
         	for(var i=0; i<northPoints.length; i++) {
 						var dps = [];
 						dps.push(new DragPoint(window.innerWidth/2, window.innerHeight/2));
-						dps.push(new DragPoint(northPoints[i].x*sensorWidth + offset + xOffset, northPoints[i].y*sensorWidth + offset + yOffset));
+						dps.push(new DragPoint(northPoints[i].x*sensorWidth + xOffset, northPoints[i].y*sensorWidth + yOffset));
 						dragPointsList.push(dps);
 					}
         }
@@ -804,7 +804,7 @@
         	for(var i=0; i<southPoints.length; i++) {
 						var dps = [];
 						dps.push(new DragPoint(window.innerWidth/2, window.innerHeight/2));
-						dps.push(new DragPoint(southPoints[i].x*sensorWidth + offset + xOffset, southPoints[i].y*sensorWidth + offset + yOffset));
+						dps.push(new DragPoint(southPoints[i].x*sensorWidth + xOffset, southPoints[i].y*sensorWidth + yOffset));
 						dragPointsList.push(dps);
 					}
         }
@@ -820,8 +820,8 @@
 
         			// if(dis < 0.5) {
         				var dps = [];
-								dps.push(new DragPoint(northPoint.x*sensorWidth + offset + xOffset, northPoint.y*sensorWidth + offset + yOffset));
-								dps.push(new DragPoint(southPoint.x*sensorWidth + offset + xOffset, southPoint.y*sensorWidth + offset + yOffset));
+								dps.push(new DragPoint(northPoint.x*sensorWidth + xOffset, northPoint.y*sensorWidth + yOffset));
+								dps.push(new DragPoint(southPoint.x*sensorWidth + xOffset, southPoint.y*sensorWidth + yOffset));
 								dragPointsList.push(dps);
         			// }
         		}
